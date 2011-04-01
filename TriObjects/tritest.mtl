@@ -1,0 +1,55 @@
+newmtl white
+Ka 0.4  0.4  0.4
+Kd 0.8  0.8  0.8
+Ks 0.3  0.3  0.3
+Ns 60.0
+Ni 1.0
+Lc 1  1  1
+Tf 1  1  1
+
+newmtl red
+Ka 0.12  0.12  0.12
+Kd 0.7  0  0
+Ks 0.83  0.83  0.83
+Ns 106.0
+Ni 1.0
+Lc 1  1  1
+Tf 1  1  1
+
+
+newmtl blue
+Ka 0  0  0
+Kd 0  0  0.68
+Ks 1  1  1
+Ns 109.0
+Ni 1.0
+Lc 1  1  1
+Tf 1  1  1
+
+newmtl green
+Ka 0  0.25  0
+Kd 0  0.25  0
+Ks 0  0.25  0
+Ns 65.89
+Ni 1.0
+Lc 1  1  1
+Tf 1  1  1
+
+newmtl yellow
+Ka 1  0.67  0
+Kd 1  0.67  0
+Ks 1  0.67  0
+Ns 65.89
+Ni 1.0
+Lc 1  1  1
+Tf 1  1  1
+
+newmtl purple
+Ka 0.5  0  1
+Kd 0.5  0  1
+Ks 0.5  0  1
+Ns 65.89
+Ni 1.0
+Lc 1  1  1
+Tf 1  1  1
+

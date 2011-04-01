@@ -1,0 +1,65 @@
+<!ELEMENT Scene (Objects, Lights, Camera)>
+<!ELEMENT Objects (PMesh*)>
+<!ELEMENT PMesh (fileType, objName, modelMat, center)>
+<!ELEMENT fileType (#PCDATA)>
+<!ELEMENT objName (#PCDATA)>
+<!ELEMENT modelMat (x00, x01, x02, x03, x10, x11, x12, x13, x20, x21, x22, x23, x30, x31, x32, x33)>
+<!ELEMENT x00 (#PCDATA)>
+<!ELEMENT x01 (#PCDATA)>
+<!ELEMENT x02 (#PCDATA)>
+<!ELEMENT x03 (#PCDATA)>
+<!ELEMENT x10 (#PCDATA)>
+<!ELEMENT x11 (#PCDATA)>
+<!ELEMENT x12 (#PCDATA)>
+<!ELEMENT x13 (#PCDATA)>
+<!ELEMENT x20 (#PCDATA)>
+<!ELEMENT x21 (#PCDATA)>
+<!ELEMENT x22 (#PCDATA)>
+<!ELEMENT x23 (#PCDATA)>
+<!ELEMENT x30 (#PCDATA)>
+<!ELEMENT x31 (#PCDATA)>
+<!ELEMENT x32 (#PCDATA)>
+<!ELEMENT x33 (#PCDATA)>
+<!ELEMENT center (X, Y, Z)>
+<!ELEMENT Lights (Light, Light, Light, Light, Light, Light, Light, Light)>
+<!ELEMENT Light (Number, lightSwitch, ambient, diffuse, specular, position, viewPos, direction, spotCutoff, spotExponent, spotDirection, constAttenuation, linearAttenuation, quadraticAttenuation, location)>
+<!ELEMENT Number (#PCDATA)>
+<!ELEMENT lightSwitch (#PCDATA)>
+<!ELEMENT ambient (R, G, B, A)>
+<!ELEMENT R (#PCDATA)>
+<!ELEMENT G (#PCDATA)>
+<!ELEMENT B (#PCDATA)>
+<!ELEMENT A (#PCDATA)>
+<!ELEMENT diffuse (R, G, B, A)>
+<!ELEMENT specular (R, G, B, A)>
+<!ELEMENT position (X, Y, Z, W)>
+<!ELEMENT X (#PCDATA)>
+<!ELEMENT Y (#PCDATA)>
+<!ELEMENT Z (#PCDATA)>
+<!ELEMENT W (#PCDATA)>
+<!ELEMENT viewPos (X, Y, Z, W)>
+<!ELEMENT direction (X, Y, Z, W)>
+<!ELEMENT spotCutoff (#PCDATA)>
+<!ELEMENT spotExponent (#PCDATA)>
+<!ELEMENT spotDirection (X, Y, Z)>
+<!ELEMENT constAttenuation (#PCDATA)>
+<!ELEMENT linearAttenuation (#PCDATA)>
+<!ELEMENT quadraticAttenuation (#PCDATA)>
+<!ELEMENT location (#PCDATA)>
+<!ELEMENT Camera (viewMat, near, far, upX, upY, upZ, eyeX, eyeY, eyeZ, ctrX, ctrY, ctrZ, wLeft, wRight, wBottom, wTop)>
+<!ELEMENT viewMat (x00, x01, x02, x03, x10, x11, x12, x13, x20, x21, x22, x23, x30, x31, x32, x33)>
+<!ELEMENT near (#PCDATA)>
+<!ELEMENT far (#PCDATA)>
+<!ELEMENT upX (#PCDATA)>
+<!ELEMENT upY (#PCDATA)>
+<!ELEMENT upZ (#PCDATA)>
+<!ELEMENT eyeX (#PCDATA)>
+<!ELEMENT eyeY (#PCDATA)>
+<!ELEMENT eyeZ (#PCDATA)>
+<!ELEMENT ctrX (#PCDATA)>
+<!ELEMENT ctrY (#PCDATA)>
+<!ELEMENT ctrZ (#PCDATA)>
+<!ELEMENT wLeft (#PCDATA)>
+<!ELEMENT wRight (#PCDATA)>
+<!ELEMENT wBottom (#PCDATA)>
+<!ELEMENT wTop (#PCDATA)>

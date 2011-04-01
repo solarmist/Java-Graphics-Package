@@ -1,0 +1,16 @@
+#
+#
+mtllib tester.mtl
+v 0.0 10.0 -30.0
+v -10.0 -10.0 -30.0
+v 10.0 -10.0 -30.0
+# 3 vertices
+
+# 0 vertex parms
+
+# 0 normals
+
+g tri
+usemtl orange
+f 1//1 2//2 3//3 
+# 6 elements

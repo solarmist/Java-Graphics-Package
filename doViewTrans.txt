@@ -1,0 +1,30 @@
+	public void doViewTrans() {
+		double [] modelViewInvTranspose = new double [16];
+		for(int obj=0;obj<theScene.objects.size();obj++){
+			PMesh thisObj = (PMesh)theScene.objects.get(obj);
+			// concatenate modeling and viewing transforms
+			double [] modelView = MatrixOps.newIdentity();
+			modelView = MatrixOps.multMat(modelView, thisObj.modelMat);	
+			modelView =MatrixOps.multMat(theScene.camera.viewMat, modelView);
+			try{
+				modelViewInvTranspose = MatrixOps.inverseTranspose(modelView);
+			}
+			catch(Exception exception) {
+				System.out.println("doViewTrans exception calculating modelViewInvTranspose\n");
+			} // end catch
+			
+			thisObj.viewNormArray = ne w ArrayList<Double3D>();
+			Double3D transNorm = new Double3D();
+			for(int vert=0; vert < thisObj.numVerts; vert++){
+				// apply both transforms and save in viewPos
+				thisObj.vertArray.get(vert).viewPos=
+	                          thisObj.vertArray.get(vert).worldPos.preMultiplyMatrix(modelView);
+				transNorm = thisObj.vertNormArray.get(vert).preMultiplyMatrix(modelViewInvTranspose);
+				thisObj.viewNormArray.add(vert, transNorm);
+				//thisObj.viewNormArray.add(vert, thisObj.vertNormArray.get(vert).preMultiplyMatrix(modelViewInvTranspose));
+			}
+			// transform object center (into viewCenter) and set it into the Bounding sphere
+			thisObj.viewCenter = thisObj.center.preMultiplyMatrix(theScene.camera.viewMat);
+			thisObj.calcViewPolyNorms();
+		}			
+	}

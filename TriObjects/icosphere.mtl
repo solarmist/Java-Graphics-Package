@@ -1,0 +1,9 @@
+# Blender3D MTL File: 
+# Material Count: 0
+
+newmtl red
+Ka 1.0000 0.0000 0.0000
+Kd 1.0000 0.0000 0.0000
+Ks 1.0000 0.5000 0.5000
+illum 2
+Ns 60.0000
