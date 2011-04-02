@@ -4,13 +4,6 @@
  * @author Joshua Olson
  * @version	1-Apr-2011
  */
-//
-//  Ray.h
-//  RayTracer
-//
-//  Created by Joshua Olson on 3/16/11.
-//  Copyright 2011 solarmist. All rights reserved.
-//
 
 public class Ray{
 
