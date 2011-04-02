@@ -40,5 +40,5 @@ public class Ray{
     
 	public String toString(){
 		return '[' + data[0].toString() +  " + t" + data[1].toString() + ']';
-	} // end toString
+	} 
 }
