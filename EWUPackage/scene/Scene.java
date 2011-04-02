@@ -315,7 +315,7 @@ public class Scene implements GLEventListener
   			System.out.println("Begin RayTrace");
   			System.out.println("On "+ Thread.currentThread());
   			topFrame.statusArea.showStatus("Ray Tracing...");
-//RayTracer rayTracer = new RayTracer(this, gl, glu);
+  			RayTracer rayTracer = new RayTracer(this, gl, glu);
   			System.out.println("End RayTrace");
 			
 			gl.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
