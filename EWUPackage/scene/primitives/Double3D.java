@@ -10,6 +10,9 @@ import java.text.DecimalFormat;
  */
 public class Double3D implements Serializable
 {
+	/**
+	 * 
+	 */
 	private static final long serialVersionUID = 1L;
 	public double x;
 	public double y;

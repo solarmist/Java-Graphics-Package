@@ -1,14 +1,8 @@
-import java.text.DecimalFormat;
-
-/**
- * 
- */
-
 /*
  * Ray class
  * 
  * @author Joshua Olson
- *
+ * @version	1-Apr-2011
  */
 //
 //  Ray.h
