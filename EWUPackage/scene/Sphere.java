@@ -21,9 +21,16 @@ public class Sphere implements Shape
 		theObj = ownerObj;
 	} // end constructor
 	
+	public Sphere(Sphere from)
+	{
+		center = from.center;
+		radius = from.radius;
+		radiusSq = from.radiusSq;
+		theObj = from.theObj;
+	} // end constructor
 
 	public String toString(){
-		String rtn = new String("Center: "+center+" Radius "+radius);
+		String rtn = new String("Center: " + center.toString() + " Radius " + radius);
 		return rtn;
 	} // end method toString
 

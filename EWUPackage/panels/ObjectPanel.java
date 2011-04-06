@@ -524,7 +524,6 @@ public class ObjectPanel extends JPanel
 			public void actionPerformed(ActionEvent evt) {
 	  			System.out.println("On "+ Thread.currentThread());
 				theScene.topFrame.statusArea.showStatus("Raytracing...");
-				System.out.println("Add a raytracer");
 				theScene.rayTrace =true;
 				theScene.refreshCanvas();			
 			} // end actionPerformed
