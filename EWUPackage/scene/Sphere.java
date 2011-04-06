@@ -13,6 +13,14 @@ public class Sphere implements Shape
 	public double radiusSq;
 	public PMesh theObj;
 
+	public Sphere()
+	{
+		center = null;
+		radius = 0;
+		radiusSq = radius * radius;
+		theObj = null;
+	} // end constructor
+	
 	public Sphere(Double3D cent, double rad, PMesh ownerObj)
 	{
 		center = cent;
