@@ -1,0 +1,6 @@
+This is a graphics package for teaching the basics of OpenGL and RayTracing using Java and JOGL.
+This package supports CSCD471 and CSCD570 at Eastern Washington University.
+The initial contribution was written primarily by Bill Clark with contributions by past students.
+All additional commits are by Joshua Olson unless otherwise noted.
+
+This code is available freely, but if you use it please attribute the code to it's authors.
