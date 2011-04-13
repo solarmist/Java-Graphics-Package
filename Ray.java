@@ -25,7 +25,7 @@ public class Ray{
 	Double3D direction(){
 		return data[1];
 	}
-	Double3D pointAtParameter(float t){
+	Double3D pointAtParameter(double t){
 		return new Double3D(data[0].x + t * data[1].x,
 					data[0].y + t * data[1].y,
 					data[0].z + t * data[1].z);

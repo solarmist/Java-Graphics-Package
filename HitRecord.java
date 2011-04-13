@@ -7,9 +7,10 @@
 
 public class HitRecord {
 	    double t;
+	    int index = -1;			//Which object did it hit
 	    Double3D normal;
 	    DoubleColor color;
-	    Double3D uv;         //We will use this for 2d textures
-	    Double3D hit_p;      //The point of intersection
-	    //Texture* hit_tex;   //The nearest intersected object's texture
+	    Double3D uv;       	//We will use this for 2d textures
+	    Double3D hitP;      //The point of intersection
+	    //Texture* hitTex;	//The nearest intersected object's texture
 }

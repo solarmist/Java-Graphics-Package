@@ -43,8 +43,9 @@ public class Sphere implements Shape
 	} // end method toString
 
 	@Override
-	public boolean hit(Ray r, double tmin, double tmax, double time,
-			HitRecord record) {
+	public boolean hit(Ray r, double tMin, double tMax, double time,
+			HitRecord record) 
+	{
 	    Double3D temp = new Double3D(r.origin().x - center.x,
 	    							 r.origin().y - center.y,
 	    							 r.origin().z - center.z);
@@ -56,18 +57,20 @@ public class Sphere implements Shape
 	    double discriminant = b * b - 4 * a * c;
 	    
 	    //First check to see if the ray intersects the sphere
-	    if(discriminant > 0){
+	    if(discriminant > 0)
+	    {
 	    	discriminant = Math.sqrt(discriminant);
 	        double t = (- b - discriminant) / (2 * a);
 	        
 	        //Now check for a valid interval
-	        if(t < tmin)
+	        if(t < tMin)
 	        	t = (- b + discriminant) / (2 * a);
-	        if(t < tmin || t > tmax)
+	        if(t < tMin || t > tMax)
 	        	return false;
 	        
 	        //We have a valid hit
 	        record.t = t;
+	        record.hitP = r.pointAtParameter(t);
 	        record.normal = new Double3D(r.origin().x + t * r.direction().x - center.x,
 	        							 r.origin().y + t * r.direction().y - center.y,
 	        							 r.origin().z + t * r.direction().z - center.z);
@@ -81,8 +84,8 @@ public class Sphere implements Shape
 
 
 	@Override
-	public boolean shadowHit(Ray r, double tmin, double tmax, double time,
-			HitRecord record) {
+	public boolean shadowHit(Ray r, double tMin, double tMax, double time) 
+	{
 		Double3D temp = new Double3D(r.origin().x - center.x,
 				r.origin().y - center.y,
 				r.origin().z - center.z);
@@ -99,9 +102,9 @@ public class Sphere implements Shape
 			double t = (- b - discriminant) / (2 * a);
 
 			//Now check for a valid interval
-			if(t < tmin)
+			if(t < tMin)
 				t = (- b + discriminant) / (2 * a);
-			if(t < tmin || t > tmax)
+			if(t < tMin || t > tMax)
 				return false;
 
 			//We have a valid hit

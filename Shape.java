@@ -7,6 +7,6 @@
 
 interface Shape
 {
-     public boolean hit(Ray r, double tmin, double tmax, double time, HitRecord record);
-     public boolean shadowHit(Ray r, double tmin, double tmax, double time, HitRecord record);
+     public boolean hit(Ray r, double tMin, double tMax, double time, HitRecord record);
+     public boolean shadowHit(Ray r, double tMin, double tMax, double time);
 }

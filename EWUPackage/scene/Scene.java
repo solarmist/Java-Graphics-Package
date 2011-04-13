@@ -316,11 +316,17 @@ public class Scene implements GLEventListener
   			System.out.println("On "+ Thread.currentThread());
   			topFrame.statusArea.showStatus("Ray Tracing...");
   			RayTracer rayTracer = new RayTracer(this, gl, glu);
+  			//Thread rayTracing = new Thread(rayTracer);
+  			//rayTracing.start();
+  			rayTracer.run();
   			System.out.println("End RayTrace");
 			
+<<<<<<< HEAD
 			gl.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
 	        gl.glPopMatrix();
 
+=======
+>>>>>>> Multi-threaded raytracing with shading(not working.
 			rayTrace = false;
 
 		} // end if
@@ -332,33 +338,33 @@ public class Scene implements GLEventListener
 				pickPending = false;
 			} // end if
 
-		camera.update();
-		camera.look(gl, glu);
+			camera.update();
+			camera.look(gl, glu);
 
-		gl.glClearColor(this.clearColorR, this.clearColorG, this.clearColorB,
-						this.clearColorA); // FogPanel
-		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			gl.glClearColor(this.clearColorR, this.clearColorG, this.clearColorB,
+							this.clearColorA); // FogPanel
+			gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		if (this.fog) { // is fog enabled?
-			setupFog(gl, glu);
-		} // end if
-		else {
-			gl.glDisable(GL_FOG);
-		} // end else
+			if (this.fog) { // is fog enabled?
+				setupFog(gl, glu);
+			} // end if
+			else {
+				gl.glDisable(GL_FOG);
+			} // end else
 
-		if (drawAxis) {
-			drawAxis(gl, glu);
-		} // end if
+			if (drawAxis) {
+				drawAxis(gl, glu);
+			} // end if
 
-		// Setup appropriate OpenGL state based on settings (fill, cull, etc.)
-		setupOpenGLState(gl, glu);
+			// Setup appropriate OpenGL state based on settings (fill, cull, etc.)
+			setupOpenGLState(gl, glu);
 
-		// Draw each PMesh object
-		PMesh curObj = null;
-		for(int i = 0; i < objects.size(); i++) {
-			curObj = (PMesh) objects.get(i);
-			curObj.draw(camera, gl, glu);
-		} // end for
+			// Draw each PMesh object
+			PMesh curObj = null;
+			for(int i = 0; i < objects.size(); i++) {
+				curObj = (PMesh) objects.get(i);
+				curObj.draw(camera, gl, glu);
+			} // end for
 		}
 	} // end method display
 	/**
