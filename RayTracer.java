@@ -13,8 +13,8 @@ import javax.media.opengl.glu.*;
 
 public class RayTracer implements Runnable
 {
-	final int THREADS = 1;
-	DoubleColor draw[][];
+	final int THREADS = 8;
+	DoubleColor viewPort[][];
 	Scene scene;
 	PMesh[] shapes;
 	Sphere[] spheres;
@@ -41,10 +41,10 @@ public class RayTracer implements Runnable
 		widthRatio = scene.camera.windowWidth / vpWidth;
 		heightRatio = scene.camera.windowHeight / vpHeight;
 				
-		draw = new DoubleColor[(int)vpWidth][(int)vpHeight];
+		viewPort = new DoubleColor[(int)vpWidth][(int)vpHeight];
 		for(int i = 0; i < vpWidth; i++)
 			for(int j = 0; j < vpHeight; j++)
-				draw[i][j] = new DoubleColor(0.0, 0.0, 0.0, 1.0);
+				viewPort[i][j] = new DoubleColor(0.0, 0.0, 0.0, 1.0);
 		
 		numObjects = scene.objects.size();
 		shapes = new PMesh[numObjects];
@@ -53,13 +53,6 @@ public class RayTracer implements Runnable
 		//Loop through all objects in the scene and store them in the object so we don't need to access it from generic objects
 		for(int objNum = 0; objNum < numObjects; objNum++){
 			shapes[objNum] = (PMesh) scene.objects.elementAt(objNum);
-
-			//Default to opposite of spheresOnly for now
-			if(!scene.spheresOnly)
-				System.out.println("Spheres!");
-
-			//Set the object's color
-			//colors[objNum] = shapes[cur].materials[shapes.surfHead.material].kd;
 
 			spheres[objNum] = new Sphere(shapes[objNum].boundingSphere);
 			//Apply the camera transform the point
@@ -108,8 +101,6 @@ public class RayTracer implements Runnable
 		int yMin, yMax;
 		int curX = 0, curY = 0;
 		
-		public boolean finished = false;
-		
 		Renderer()
 		{
 			xMin = (int)scene.camera.viewportLeft;
@@ -143,22 +134,17 @@ public class RayTracer implements Runnable
 					Double3D dir = new Double3D(worldX, -worldY, -scene.camera.near);
 					dir = dir.getUnit();
 					Ray ray = new Ray(origin, dir);
-					
-					//For debugging
-					if(curX == (int)vpWidth/2 && curY == (int)vpHeight/2)
-						ray.direction();
-					
-					draw[curX][curY] = trace(ray, 0);	//Start at 0 recursive depth
+								
+					viewPort[curX][curY] = trace(ray, 0);	//Start at 0 recursive depth
 				}//for y
 			}//for x
-			finished = true;
 		}
 		
 		//All rays we deal with here are in world coordinates.
 		DoubleColor trace(Ray ray, int rDepth)
 		{
-			if(rDepth > scene.maxRecursiveDepth)
-				return new DoubleColor(0.0, 0.0, 0.0, 1.0);
+			//if(rDepth > scene.maxRecursiveDepth)
+			//	return new DoubleColor(0.1, 0.1, 0.1, 1.0);
 			
 			DoubleColor color = new DoubleColor(0.1, 0.1, 0.1, 1.0);
 			double tMin = 0.00001;
@@ -167,7 +153,7 @@ public class RayTracer implements Runnable
 			PMesh obj;
 			
 			//Spheres only for now
-			if(!scene.spheresOnly)
+			//if(!scene.spheresOnly)
 				for(int i = 0; i < numObjects; i++)
 					if(spheres[i].hit(ray, tMin, tMax, 0, hit))
 					{
@@ -175,18 +161,17 @@ public class RayTracer implements Runnable
 						hit.index = i;
 					}
 			//Go check for intersection with the bounding sphere, then check for all triangles
-			else
-				return color;
+			//else
+			//	return color;
 		
 			//Find nearest intersection with scene
-			//Computer intersection point and normal
+			//Compute intersection point and normal
 			if(hit.index >= 0)
 			{
 				obj = shapes[hit.index];
 				//If it intersects then multi-sample
 				color = shade(hit.hitP, hit.normal, rDepth, obj.materials[obj.surfHead.material]);
 			}
-			
 			return color;
 		}
 		
@@ -221,7 +206,7 @@ public class RayTracer implements Runnable
 					Ray light = new Ray(iPoint, new Double3D((double)lights[i].direction[0], (double)lights[i].direction[1], (double)lights[i].direction[2]) );
 				//trace shadow ray to light source
 					
-					if(shadowTrace(light))
+					/*if(shadowTrace(light))
 					{
 						double cosineTheta = surfNormal.dot(light.data[1]);
 						Double3D Pr = surfNormal.sMult(surfNormal.dot(light.data[1].sMult(-1)));
@@ -231,7 +216,7 @@ public class RayTracer implements Runnable
 						//Intensity (Kd * (L . N) + Ks *(R.V)^n/(r + k)
 						color.plus(new DoubleColor( (double)lights[i].diffuse[0], (double)lights[i].diffuse[1], 
 													(double)lights[i].diffuse[2], (double)lights[i].diffuse[3]) );
-					}
+					}//*/
 				}
 			}
 			//if specular
@@ -267,7 +252,7 @@ public class RayTracer implements Runnable
 		for(int x = (int)scene.camera.viewportLeft; x < (int)scene.camera.viewportRight; x++)
 			for(int y = (int)scene.camera.viewportBottom; y < (int)scene.camera.viewportTop; y++)
 			{
-				gl.glColor3d(draw[x][y].r, draw[x][y].g, draw[x][y].b);
+				gl.glColor3d(viewPort[x][y].r, viewPort[x][y].g, viewPort[x][y].b);
 				gl.glVertex2i(x,y);
 			}
 		

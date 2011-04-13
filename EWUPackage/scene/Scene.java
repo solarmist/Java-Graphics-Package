@@ -1225,7 +1225,7 @@ public class Scene implements GLEventListener
 							Node node4 = null;
 							if (node3.getNodeName().equals("objName")) {
 								node4 = node3.getFirstChild();
-								newScene.addObject("Objects/" +
+								newScene.addObject("TriObjects/" +
 									node4.getNodeValue(), fileType);
 								pmesh = newScene.getLastPMesh();
 							}
