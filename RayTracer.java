@@ -143,17 +143,17 @@ public class RayTracer implements Runnable
 		//All rays we deal with here are in world coordinates.
 		DoubleColor trace(Ray ray, HitRecord hit)
 		{
-			if(hit.depth > Math.min(3, scene.maxRecursiveDepth))
-				return new DoubleColor(0.1, 0.1, 0.1, 1.0);
+			if(hit.depth > Math.max(5, scene.maxRecursiveDepth))
+				return new DoubleColor(0.0, 0.0, 0.0, 1.0);
 			
-			DoubleColor color = new DoubleColor(0.1, 0.1, 0.1, 1.0);
+			DoubleColor color = new DoubleColor(0.0, 0.0, 0.0, 1.0);
 			double tMin = 0.00001;
 			double tMax = 10000000;
 
 			PMesh obj;
 			
 			//Spheres only for now
-			//if(!scene.spheresOnly)
+			if(!scene.spheresOnly)
 				for(int i = 0; i < numObjects; i++)
 					if(spheres[i].hit(ray, tMin, tMax, 0, hit))
 					{
@@ -161,9 +161,7 @@ public class RayTracer implements Runnable
 						hit.index = i;
 					}
 			//Go check for intersection with the bounding sphere, then check for all triangles
-			//else
-			//	return color;
-		
+			
 			//Find nearest intersection with scene
 			//Compute intersection point and normal
 			if(hit.index >= 0)
@@ -178,14 +176,12 @@ public class RayTracer implements Runnable
 		boolean shadowTrace(Ray ray)
 		{
 			//Spheres only for now
-			//if(!scene.spheresOnly)
+			if(!scene.spheresOnly)
 				for(int i = 0; i < numObjects; i++)
 					//Does it ever hit anything? No? Then the path to the light is clear
 					if(spheres[i].shadowHit(ray, 0.00001, 10000000, 0))
 						return false;
 			//Go check for intersection with the bounding sphere, then check for all triangles
-			//else
-			//	return false;
 			
 			return true;
 		}
@@ -231,26 +227,41 @@ public class RayTracer implements Runnable
 				}
 			}
 			//Shiny Phong
-			if(!scene.reflections || (hit.normal.dot(ray.data[1]) > 0)){
+			//If IdN > 0 then we find a reflection
+			if(!scene.reflections && (hit.normal.dot(ray.data[1]) < 0) &&
+					(material.reflectivity.r > 0 || material.reflectivity.g > 0 || material.reflectivity.b > 0))
+			{
 				hit.depth++;
-				Double3D I = ray.data[1].sMult(-1.0);
-				Double3D reflectDir = hit.normal.sMult( -2 * hit.normal.dot(I) ).plus(I);
-				reflectDir = reflectDir.getUnit();
-				Ray reflect = new Ray(hit.hitP, reflectDir);
+				
+				//Double3D I = ray.data[1];
+				//R = I - 2 * (I.N)N
+				Double3D R = hit.normal.sMult( -2 * hit.normal.dot(ray.data[1]) ).plus(ray.data[1]).getUnit();
+				Ray reflect = new Ray(hit.hitP, R);
 				DoubleColor reflection = trace(reflect, hit);
 				
-				reflection.scale(1 / hit.depth);//(hit.hitP.distanceTo(reflect.data[0])));
+				//Scale by distance?
+				//reflection.scale( 1 / reflect.origin().distanceTo(hit.hitP));
+				
+				reflection.r = reflection.r * material.reflectivity.r;
+				reflection.g = reflection.g * material.reflectivity.g;
+				reflection.b = reflection.b * material.reflectivity.b;
+				
 				color.plus( reflection ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
 			}
 			
 			if(scene.refractions && (hit.normal.dot(ray.data[1]) > 0)){
 				hit.depth++;
+				
 				Double3D I = ray.data[1].sMult(-1.0);
 				Double3D reflectDir = hit.normal.sMult( -2 * hit.normal.dot(I) ).plus(I);
 				Ray reflect = new Ray(hit.hitP, reflectDir);
 				DoubleColor reflection = trace(reflect, hit);
 				
-				reflection.scale(1 / (hit.depth + 1));
+				reflection.r = reflection.r * material.refractivity.r;
+				reflection.g = reflection.g * material.refractivity.g;
+				reflection.b = reflection.b * material.refractivity.b;
+				
+				//reflection.scale(material.refractivity.r);
 				color.plus( reflection ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
 			}
 			return color;
