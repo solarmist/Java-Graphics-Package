@@ -135,21 +135,21 @@ public class RayTracer implements Runnable
 					dir = dir.getUnit();
 					Ray ray = new Ray(origin, dir);
 								
-					viewPort[curX][curY] = trace(ray, 0);	//Start at 0 recursive depth
+					viewPort[curX][curY] = trace(ray, new HitRecord());	//Start at 0 recursive depth
 				}//for y
 			}//for x
 		}
 		
 		//All rays we deal with here are in world coordinates.
-		DoubleColor trace(Ray ray, int rDepth)
+		DoubleColor trace(Ray ray, HitRecord hit)
 		{
-			//if(rDepth > scene.maxRecursiveDepth)
-			//	return new DoubleColor(0.1, 0.1, 0.1, 1.0);
+			if(hit.depth > Math.min(3, scene.maxRecursiveDepth))
+				return new DoubleColor(0.1, 0.1, 0.1, 1.0);
 			
 			DoubleColor color = new DoubleColor(0.1, 0.1, 0.1, 1.0);
 			double tMin = 0.00001;
 			double tMax = 10000000;
-			HitRecord hit = new HitRecord();
+
 			PMesh obj;
 			
 			//Spheres only for now
@@ -170,7 +170,7 @@ public class RayTracer implements Runnable
 			{
 				obj = shapes[hit.index];
 				//If it intersects then multi-sample
-				color = shade(hit.hitP, hit.normal, rDepth, obj.materials[obj.surfHead.material]);
+				color = shade(ray, hit, obj.materials[hit.index]);
 			}
 			return color;
 		}
@@ -178,20 +178,20 @@ public class RayTracer implements Runnable
 		boolean shadowTrace(Ray ray)
 		{
 			//Spheres only for now
-			if(!scene.spheresOnly)
+			//if(!scene.spheresOnly)
 				for(int i = 0; i < numObjects; i++)
 					//Does it ever hit anything? No? Then the path to the light is clear
 					if(spheres[i].shadowHit(ray, 0.00001, 10000000, 0))
 						return false;
 			//Go check for intersection with the bounding sphere, then check for all triangles
-			else
-				return false;
+			//else
+			//	return false;
 			
 			return true;
 		}
 		
 		//iPoint is the point of intersection with the surface.
-		DoubleColor shade(Double3D iPoint, Double3D surfNormal, int rDepth, MaterialCell material)
+		DoubleColor shade(Ray ray, HitRecord hit, MaterialCell material)
 		{
 			DoubleColor color = new DoubleColor(0.0, 0.0, 0.0, 0.0);
 			
@@ -203,25 +203,56 @@ public class RayTracer implements Runnable
 			//Local light or directional? If directional then we need to see if it's shining on the object
 			for(int i = 0; i < lights.length ; i++){
 				if(lights[i].lightSwitch == 1){
-					Ray light = new Ray(iPoint, new Double3D((double)lights[i].direction[0], (double)lights[i].direction[1], (double)lights[i].direction[2]) );
-				//trace shadow ray to light source
+					Double3D L = new Double3D((double)lights[i].position[0], (double)lights[i].position[1], (double)lights[i].position[2]);
+					L = L.minus(hit.hitP).getUnit();
+					Ray shadowRay = new Ray(hit.hitP, L);
+					//trace shadow ray to light source
 					
-					/*if(shadowTrace(light))
-					{
-						double cosineTheta = surfNormal.dot(light.data[1]);
-						Double3D Pr = surfNormal.sMult(surfNormal.dot(light.data[1].sMult(-1)));
-						Double3D reflect = light.data[1].minus(surfNormal.sMult(2 * surfNormal.dot(light.data[1])));
-						//double cosinePhi = reflec.dot()
-						//If the light is free add the diffuse light
-						//Intensity (Kd * (L . N) + Ks *(R.V)^n/(r + k)
-						color.plus(new DoubleColor( (double)lights[i].diffuse[0], (double)lights[i].diffuse[1], 
-													(double)lights[i].diffuse[2], (double)lights[i].diffuse[3]) );
+					//Turn shadows on and shadowRay hit nothing
+					if(scene.shadows || shadowTrace(shadowRay))
+					{	
+						double LdN = Math.max(0, hit.normal.dot(L));
+						if(LdN > 0)
+						{
+							//-2(-L.N)N + -L
+							Double3D R = hit.normal.sMult( -2 * hit.normal.dot( L.sMult(-1)) ).plus( L.sMult(-1) );
+							double RdV = Math.max(0, -R.dot(ray.data[1]) );
+							double d = L.distanceTo(hit.hitP);
+							
+							//double cosinePhi = reflec.dot()
+							//If the light is free add the diffuse light
+							//Intensity (Kd * (LdN) + Ks *(RdV)^(shiny)/(r + k)
+							color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN + lights[i].specular[0] * Math.pow(RdV, material.shiny)) / d,
+														(double)(lights[i].diffuse[1] * LdN + lights[i].specular[1] * Math.pow(RdV, material.shiny)) / d,
+														(double)(lights[i].diffuse[2] * LdN + lights[i].specular[2] * Math.pow(RdV, material.shiny)) / d,
+														1.0) );
+						}
 					}//*/
 				}
 			}
-			//if specular
-			//color = color + trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
+			//Shiny Phong
+			if(!scene.reflections || (hit.normal.dot(ray.data[1]) > 0)){
+				hit.depth++;
+				Double3D I = ray.data[1].sMult(-1.0);
+				Double3D reflectDir = hit.normal.sMult( -2 * hit.normal.dot(I) ).plus(I);
+				reflectDir = reflectDir.getUnit();
+				Ray reflect = new Ray(hit.hitP, reflectDir);
+				DoubleColor reflection = trace(reflect, hit);
+				
+				reflection.scale(1 / hit.depth);//(hit.hitP.distanceTo(reflect.data[0])));
+				color.plus( reflection ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
+			}
 			
+			if(scene.refractions && (hit.normal.dot(ray.data[1]) > 0)){
+				hit.depth++;
+				Double3D I = ray.data[1].sMult(-1.0);
+				Double3D reflectDir = hit.normal.sMult( -2 * hit.normal.dot(I) ).plus(I);
+				Ray reflect = new Ray(hit.hitP, reflectDir);
+				DoubleColor reflection = trace(reflect, hit);
+				
+				reflection.scale(1 / (hit.depth + 1));
+				color.plus( reflection ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
+			}
 			return color;
 		}
 	}
