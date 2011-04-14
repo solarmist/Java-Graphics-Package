@@ -64,15 +64,12 @@ public class RayTracer implements Runnable
 					int j = 0;
 					for(PMesh.VertListCell vert = poly.vert; vert != null; vert = vert.next)
 					{
-						v[j] = shapes[objNum].vertArray.get(vert.vert).viewPos;
+						//v[j] = shapes[objNum].vertArray.get(vert.vert).viewPos;
 						//Short circuit if possible
-						if(calcViewCoords && (v[j].x == v[j].y && v[j].y == v[j].z && v[j].z == 0))
-						{
-							v[j] = shapes[objNum].vertArray.get(vert.vert).worldPos.preMultiplyMatrix(shapes[objNum].modelMat);
-							v[j] = v[j].preMultiplyMatrix(scene.camera.viewMat);
-							shapes[objNum].vertArray.get(vert.vert).viewPos = v[j];
-							shapes[objNum].calcBoundingSphere();
-						}	
+						//if(calcViewCoords || (v[j].x == v[j].y && v[j].y == v[j].z && v[j].z == 0))
+						v[j] = shapes[objNum].vertArray.get(vert.vert).worldPos.preMultiplyMatrix(shapes[objNum].modelMat);
+						v[j] = v[j].preMultiplyMatrix(scene.camera.viewMat);
+						shapes[objNum].vertArray.get(vert.vert).viewPos = v[j];
 						j++;
 					}
 				}
@@ -168,10 +165,11 @@ public class RayTracer implements Runnable
 		//All rays we deal with here are in world coordinates.
 		DoubleColor trace(Ray ray, HitRecord hit)
 		{
-			if(hit.depth > Math.max(DEBUG_recursion, scene.maxRecursiveDepth))
-				return new DoubleColor(1.0, 1.0, 1.0, 1.0);
+			DoubleColor color = new DoubleColor(0.0, 0.0, 0.0, 1.0);
 			
-			DoubleColor color = new DoubleColor(0.1, 0.1, 0.1, 1.0);
+			if(hit.depth > Math.max(DEBUG_recursion, scene.maxRecursiveDepth))
+				return color;
+			
 			double tMin = 0.00001;
 			double tMax = 10000000;
 
@@ -213,8 +211,7 @@ public class RayTracer implements Runnable
 			
 			//Find nearest intersection with scene
 			//Compute intersection point and normal
-			if(hit.index >= 0 )
-				//If it intersects then multi-sample
+			if(hit.index >= 0 )//If it intersects then multi-sample
 				color = shade(ray, hit, shapes[hit.index].materials[hit.matIndex]);
 
 			return color;
