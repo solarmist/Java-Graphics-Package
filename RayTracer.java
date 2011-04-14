@@ -22,6 +22,7 @@ public class RayTracer implements Runnable
 	double heightRatio, widthRatio;
 	double vpWidth, vpHeight;
 	int numObjects;
+	boolean calcViewCoords = true;
 	GLU glu;
 	GL2 gl;
 	
@@ -30,6 +31,7 @@ public class RayTracer implements Runnable
 	
 	RayTracer(Scene theScene, GL2 _gl, GLU _glu)//Threaded?
 	{
+		System.out.println("Init RayTracer");
 		gl = _gl;
 		glu = _glu;
 		scene = theScene;
@@ -40,7 +42,8 @@ public class RayTracer implements Runnable
 		vpHeight = scene.camera.viewportTop - scene.camera.viewportBottom;
 		widthRatio = scene.camera.windowWidth / vpWidth;
 		heightRatio = scene.camera.windowHeight / vpHeight;
-				
+			
+		//Init the buffer
 		viewPort = new DoubleColor[(int)vpWidth][(int)vpHeight];
 		for(int i = 0; i < vpWidth; i++)
 			for(int j = 0; j < vpHeight; j++)
@@ -53,7 +56,27 @@ public class RayTracer implements Runnable
 		//Loop through all objects in the scene and store them in the object so we don't need to access it from generic objects
 		for(int objNum = 0; objNum < numObjects; objNum++){
 			shapes[objNum] = (PMesh) scene.objects.elementAt(objNum);
-
+			//Fill viewCoords of vertices
+			for(PMesh.SurfCell s = shapes[objNum].surfHead;s != null; s = s.next)
+				for(PMesh.PolyCell poly = s.polyHead; poly != null; poly = poly.next)
+				{
+					Double3D v[] = new Double3D[3];
+					int j = 0;
+					for(PMesh.VertListCell vert = poly.vert; vert != null; vert = vert.next)
+					{
+						v[j] = shapes[objNum].vertArray.get(vert.vert).viewPos;
+						//Short circuit if possible
+						if(calcViewCoords && (v[j].x == v[j].y && v[j].y == v[j].z && v[j].z == 0))
+						{
+							v[j] = shapes[objNum].vertArray.get(vert.vert).worldPos.preMultiplyMatrix(shapes[objNum].modelMat);
+							v[j] = v[j].preMultiplyMatrix(scene.camera.viewMat);
+							shapes[objNum].vertArray.get(vert.vert).viewPos = v[j];
+							shapes[objNum].calcBoundingSphere();
+						}	
+						j++;
+					}
+				}
+			
 			spheres[objNum] = new Sphere(shapes[objNum].boundingSphere);
 			//Apply the camera transform the point
 			spheres[objNum].center = spheres[objNum].center.preMultiplyMatrix(scene.camera.viewMat);
@@ -100,6 +123,8 @@ public class RayTracer implements Runnable
 		int xMin, xMax;
 		int yMin, yMax;
 		int curX = 0, curY = 0;
+		static final boolean DEBUG = false;
+		static final int DEBUG_recursion = 1;
 		
 		Renderer()
 		{
@@ -143,46 +168,83 @@ public class RayTracer implements Runnable
 		//All rays we deal with here are in world coordinates.
 		DoubleColor trace(Ray ray, HitRecord hit)
 		{
-			if(hit.depth > Math.max(5, scene.maxRecursiveDepth))
-				return new DoubleColor(0.0, 0.0, 0.0, 1.0);
+			if(hit.depth > Math.max(DEBUG_recursion, scene.maxRecursiveDepth))
+				return new DoubleColor(1.0, 1.0, 1.0, 1.0);
 			
-			DoubleColor color = new DoubleColor(0.0, 0.0, 0.0, 1.0);
+			DoubleColor color = new DoubleColor(0.1, 0.1, 0.1, 1.0);
 			double tMin = 0.00001;
 			double tMax = 10000000;
 
-			PMesh obj;
-			
 			//Spheres only for now
-			if(!scene.spheresOnly)
-				for(int i = 0; i < numObjects; i++)
-					if(spheres[i].hit(ray, tMin, tMax, 0, hit))
+			for(int i = 0; i < numObjects; i++)
+				//Did I hit the bounding sphere for an object?
+				if(spheres[i].hit(ray, tMin, tMax, 0, hit))
+					if(DEBUG || !scene.spheresOnly)
+					{
+						for(PMesh.SurfCell s = shapes[i].surfHead;s != null; s = s.next)
+							for(PMesh.PolyCell poly = s.polyHead; poly != null; poly = poly.next)
+								//Triangles only for now
+								if(poly.numVerts == 3)
+								{
+									Double3D v[] = new Double3D[3];
+									int j = 0;
+									for(PMesh.VertListCell vert = poly.vert; vert != null; vert = vert.next)
+										v[j++] = shapes[i].vertArray.get(vert.vert).viewPos;
+										//Increment j in the line post access
+									
+									//Check for a hit on this polygon
+									if(Triangle.hit(v[0],v[1],v[2],ray, tMin, tMax, 0, hit))
+									{ 
+										tMax = hit.t;
+										hit.matIndex = s.material;
+										hit.index = i;
+									}
+								}
+								else
+									System.out.println("Need to intersect polygon with " + poly.numVerts + " vertices.");
+					}
+					else
 					{
 						tMax = hit.t;
+						hit.matIndex = i;	//May cause an error if object 10 and it only has 3 materials.
 						hit.index = i;
 					}
 			//Go check for intersection with the bounding sphere, then check for all triangles
 			
 			//Find nearest intersection with scene
 			//Compute intersection point and normal
-			if(hit.index >= 0)
-			{
-				obj = shapes[hit.index];
+			if(hit.index >= 0 )
 				//If it intersects then multi-sample
-				color = shade(ray, hit, obj.materials[hit.index]);
-			}
+				color = shade(ray, hit, shapes[hit.index].materials[hit.matIndex]);
+
 			return color;
 		}
 		
 		boolean shadowTrace(Ray ray)
 		{
-			//Spheres only for now
-			if(!scene.spheresOnly)
-				for(int i = 0; i < numObjects; i++)
-					//Does it ever hit anything? No? Then the path to the light is clear
-					if(spheres[i].shadowHit(ray, 0.00001, 10000000, 0))
-						return false;
-			//Go check for intersection with the bounding sphere, then check for all triangles
-			
+			for(int i = 0; i < numObjects; i++)
+				//Spheres only for now
+				if(spheres[i].shadowHit(ray, 0.00001, 10000000, 0))
+					if(DEBUG || !scene.spheresOnly)
+					{
+						for(PMesh.SurfCell s = shapes[i].surfHead;s != null; s = s.next)
+							for(PMesh.PolyCell poly = s.polyHead; poly != null; poly = poly.next)
+								if(poly.numVerts == 3)
+								{
+									Double3D v[] = new Double3D[3];
+									int j = 0;
+									for(PMesh.VertListCell vert = poly.vert; vert != null; vert = vert.next)
+										v[j++] = shapes[i].vertArray.get(vert.vert).viewPos;
+										//Increment j in the line post access
+									
+									if(Triangle.shadowHit(v[0], v[1], v[2], ray, 0.00001, 10000000, 0))
+										return false;
+								}
+								else
+									System.out.println("Need to intersect polygon with " + poly.numVerts + " vertices.");
+					}
+					else
+						return false;	
 			return true;
 		}
 		
@@ -205,7 +267,7 @@ public class RayTracer implements Runnable
 					//trace shadow ray to light source
 					
 					//Turn shadows on and shadowRay hit nothing
-					if(scene.shadows || shadowTrace(shadowRay))
+					if(!scene.shadows || shadowTrace(shadowRay))
 					{	
 						double LdN = Math.max(0, hit.normal.dot(L));
 						if(LdN > 0)
@@ -228,7 +290,7 @@ public class RayTracer implements Runnable
 			}
 			//Shiny Phong
 			//If IdN > 0 then we find a reflection
-			if(!scene.reflections && (hit.normal.dot(ray.data[1]) < 0) &&
+			if(scene.reflections && (hit.normal.dot(ray.data[1]) < 0) &&
 					(material.reflectivity.r > 0 || material.reflectivity.g > 0 || material.reflectivity.b > 0))
 			{
 				hit.depth++;
@@ -247,22 +309,35 @@ public class RayTracer implements Runnable
 				reflection.b = reflection.b * material.reflectivity.b;
 				
 				color.plus( reflection ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
+				hit.depth--;
 			}
 			
-			if(scene.refractions && (hit.normal.dot(ray.data[1]) > 0)){
+			if(scene.refractions &&// (hit.normal.dot(ray.data[1]) > 0) &&
+					(material.refractivity.r > 0 || material.refractivity.g > 0 || material.refractivity.b > 0))
+			{
 				hit.depth++;
+
+				double n = 1.0; //From air
+				double nt = material.refractiveIndex; //1.5; //Into glass
+				Double3D D = ray.data[1].sMult(1);
+				Double3D N = hit.normal;
 				
-				Double3D I = ray.data[1].sMult(-1.0);
-				Double3D reflectDir = hit.normal.sMult( -2 * hit.normal.dot(I) ).plus(I);
-				Ray reflect = new Ray(hit.hitP, reflectDir);
-				DoubleColor reflection = trace(reflect, hit);
+				double DdN = N.dot(D); //If this is < 0 then nothing
+				double cosineThetaSq = 1 -(n*n * (1 - DdN*DdN)) / nt;
+				Double3D temp = D.plus(N.sMult(-1 * DdN)).sMult(n / nt);
+				Double3D refractDir = N.sMult(Math.sqrt(cosineThetaSq)).plus(temp);
 				
-				reflection.r = reflection.r * material.refractivity.r;
-				reflection.g = reflection.g * material.refractivity.g;
-				reflection.b = reflection.b * material.refractivity.b;
+				Ray refract = new Ray(hit.hitP, refractDir);
+				DoubleColor refraction = trace(refract, hit);
+				
+				refraction.r = refraction.r * material.refractivity.r;
+				refraction.g = refraction.g * material.refractivity.g;
+				refraction.b = refraction.b * material.refractivity.b;
 				
 				//reflection.scale(material.refractivity.r);
-				color.plus( reflection ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
+				color.plus( refraction ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
+				
+				hit.depth--;
 			}
 			return color;
 		}

@@ -319,6 +319,7 @@ public class Scene implements GLEventListener
   			//Thread rayTracing = new Thread(rayTracer);
   			//rayTracing.start();
   			rayTracer.run();
+  			
   			System.out.println("End RayTrace");
 			
 <<<<<<< HEAD

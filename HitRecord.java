@@ -8,6 +8,7 @@
 public class HitRecord {
 	    double t;
 	    int index = -1;			//Which object did it hit
+	    int matIndex = -1;
 	    int depth = 0;
 	    Double3D normal;
 	    DoubleColor color;
