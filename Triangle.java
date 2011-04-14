@@ -85,6 +85,7 @@ public class Triangle implements Shape
 	    
 	    if(tval >= tMin && tval <= tMax){
 	        record.t = tval;
+	        record.hitP = r.pointAtParameter(tval);
 	        //record.normal = unitVector(cross((p1 - p0), (p2-p0)));
 	        //record.color = color;
 	        

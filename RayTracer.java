@@ -13,7 +13,7 @@ import javax.media.opengl.glu.*;
 
 public class RayTracer implements Runnable
 {
-	final int THREADS = 8;
+	final int THREADS = 1;
 	DoubleColor viewPort[][];
 	Scene scene;
 	PMesh[] shapes;
@@ -123,8 +123,14 @@ public class RayTracer implements Runnable
 		int yMin, yMax;
 		int startLine;
 		int curX = 0, curY = 0;
-		static final boolean DEBUG = false;
+		int checkerFreq = 200;
+		int samples;
+	    Double3D imageSamples[];
+	    boolean sampled = true;
+	    
+	    static final boolean DEBUG = false;
 		static final int DEBUG_recursion = 5;
+		static final int DEBUG_samples = 5;
 		
 		Renderer()
 		{
@@ -132,6 +138,26 @@ public class RayTracer implements Runnable
 			xMax = (int)scene.camera.viewportRight; 
 			yMin = (int)scene.camera.viewportBottom; 
 			yMax = (int)scene.camera.viewportTop;
+			
+			if(scene.antiAliasing)
+			{
+				samples = Math.max(scene.raysPerPixel, DEBUG_samples);
+				imageSamples = new Double3D[samples];
+				for (int i = 0; i < samples; i++)
+					imageSamples[i] = new Double3D(0,0,0);
+				
+				Sample.multiJitter(imageSamples, samples);
+			    
+			    //Samples are in the range [-2,2]
+				Sample.cubicSplineFilter(imageSamples, samples);
+				
+				//Scale image samples to [-1,1]
+			    for (int i = 0; i < samples; i++)
+			    {
+			        imageSamples[i].x = (imageSamples[i].x + 1.0) / 2.0;
+			        imageSamples[i].y = (imageSamples[i].y + 1.0) / 2.0;
+			    }
+			}
 		}
 		
 		Renderer(int _xMin, int _xMax, int _yMin, int _yMax, int line)
@@ -141,6 +167,32 @@ public class RayTracer implements Runnable
 			yMin = _yMin; 
 			yMax = _yMax;
 			startLine = line;
+			
+			if(DEBUG || scene.antiAliasing)
+			{
+				sampled = false;
+				
+				samples = Math.max(scene.raysPerPixel, DEBUG_samples);
+				imageSamples = new Double3D[samples];
+				for (int i = 0; i < samples; i++)
+					imageSamples[i] = new Double3D(0,0,0);
+				
+				Sample.nrooks(imageSamples, samples);
+			    
+			    //Samples are in the range [-2,2]
+				//Sample.cubicSplineFilter(imageSamples, samples);
+				
+				Double3D[] t = imageSamples.clone();
+				
+				//Scale image samples to [-1,1] and adjust to worldCoords
+			    for (int i = 0; i < samples; i++)
+			    {
+			        imageSamples[i].x = widthRatio  * ((imageSamples[i].x + 1.0) / 2.0);
+			        imageSamples[i].y = heightRatio * ((imageSamples[i].y + 1.0) / 2.0);
+			    }
+			    Double3D[] p = imageSamples.clone();
+			    p.clone();
+			}
 		}
 		
 		@Override
@@ -150,12 +202,15 @@ public class RayTracer implements Runnable
 			Double3D origin = new Double3D(0.0, 0.0, 0.0);
 			
 			//Work though viewport (pixel) coordinates
-			double worldY = scene.camera.windowBottom + (yMin + startLine) * heightRatio;
+			//Start in the middle of pixel 0
+			double worldY = scene.camera.windowBottom + (yMin + startLine + 0.5) * heightRatio;
 			for(curY = yMin + startLine; curY < yMax; curY = curY + THREADS){
 				worldY += THREADS * heightRatio;
-				double worldX = scene.camera.windowLeft + xMin * widthRatio;
-				for(curX = xMin; curX < xMax; curX++){
-					//0,0 in viewport would be -6.90,-5 in world
+				//Start in the middle of pixel 0
+				double worldX = scene.camera.windowLeft + (xMin + 0.5) * widthRatio;
+				
+				for(curX = xMin; curX < xMax; curX++)
+				{
 					worldX += widthRatio;
 					Double3D dir = new Double3D(worldX, -worldY, -scene.camera.near);
 					dir = dir.getUnit();
@@ -164,6 +219,31 @@ public class RayTracer implements Runnable
 					viewPort[curX][curY] = trace(ray, new HitRecord());	//Start at 0 recursive depth
 				}//for y
 			}//for x
+		}
+		
+		//Display checker board background
+		DoubleColor checkerBackgroundHit(Ray r, HitRecord hit)
+		{	
+			DoubleColor black = new DoubleColor(0, 0, 0 ,1);
+			DoubleColor white = new DoubleColor(1, 1, 1 ,1);
+			
+			//Find the t value where z = scene.camera.far
+			double t = -scene.camera.far / r.data[1].z; 
+			
+			hit.hitP = r.pointAtParameter(t);
+			hit.hitP.x = (hit.hitP.x > 0)? hit.hitP.x : -hit.hitP.x + checkerFreq / 2;
+			hit.hitP.y = (hit.hitP.y > 0)? hit.hitP.y : -hit.hitP.y + checkerFreq / 2;
+			
+			if( hit.hitP.x % checkerFreq < checkerFreq / 2 )//&& p.x < scene.camera.windowRight)
+				if( hit.hitP.y % checkerFreq < checkerFreq / 2 )// && p.y < scene.camera.windowTop)
+					return white;
+				else
+					return black;
+			else
+				if( hit.hitP.y % checkerFreq < checkerFreq / 2 )// && p.y < scene.camera.windowTop)
+					return black;
+				else
+					return white;
 		}
 		
 		//All rays we deal with here are in world coordinates.
@@ -181,7 +261,7 @@ public class RayTracer implements Runnable
 			for(int i = 0; i < numObjects; i++)
 				//Did I hit the bounding sphere for an object?
 				if(spheres[i].hit(ray, tMin, tMax, 0, hit))
-					if(DEBUG || !scene.spheresOnly)
+					if(scene.spheresOnly)
 					{
 						for(PMesh.SurfCell s = shapes[i].surfHead;s != null; s = s.next)
 							for(PMesh.PolyCell poly = s.polyHead; poly != null; poly = poly.next)
@@ -213,8 +293,33 @@ public class RayTracer implements Runnable
 					}
 			
 			if(hit.index >= 0 )//If it intersects then multi-sample
-				color = shade(ray, hit, shapes[hit.index].materials[hit.matIndex]);
+			{
+				if(!sampled && hit.depth == 0)
+				{
+					//Only sample once
+					sampled = true;
+					
+					Double3D dir = ray.data[1];
+					DoubleColor antiAlias = new DoubleColor(0,0,0,1);
+					
+					for(int i = 0; i < samples; i++)
+					{
+						ray.data[1].x = dir.x + imageSamples[i].x;
+						ray.data[1].y = dir.y + imageSamples[i].y;
 
+						antiAlias.plus( trace(ray, new HitRecord()));
+					}
+					antiAlias.scale(1 / samples);
+					
+					color.plus(antiAlias);
+				}
+				else
+					color = shade(ray, hit, shapes[hit.index].materials[hit.matIndex]);
+			}
+			else//We hit nothing check for intersection with the far clip plane for checkerboard pattern.
+				if(!scene.checkerBackground)
+					color = checkerBackgroundHit(ray, hit);
+				
 			return color;
 		}
 		
@@ -223,7 +328,7 @@ public class RayTracer implements Runnable
 			for(int i = 0; i < numObjects; i++)
 				//Spheres only for now
 				if(spheres[i].shadowHit(ray, 0.00001, 10000000, 0))
-					if(DEBUG || !scene.spheresOnly)
+					if(scene.spheresOnly)
 					{
 						for(PMesh.SurfCell s = shapes[i].surfHead;s != null; s = s.next)
 							for(PMesh.PolyCell poly = s.polyHead; poly != null; poly = poly.next)
@@ -253,8 +358,8 @@ public class RayTracer implements Runnable
 			DoubleColor color = new DoubleColor(0.0, 0.0, 0.0, 0.0);
 			
 			//Add ambient light only once
-			color.plus(new DoubleColor( (double)(lights[0].ambient[0] * material.ka.r), (double)(lights[0].ambient[1] * material.ka.g), 
-										(double)(lights[0].ambient[2] * material.ka.b), (double)(lights[0].ambient[3] * material.ka.a) ));
+			//color.plus(new DoubleColor( (double)(lights[0].ambient[0] * material.ka.r), (double)(lights[0].ambient[1] * material.ka.g), 
+			//							(double)(lights[0].ambient[2] * material.ka.b), (double)(lights[0].ambient[3] * material.ka.a) ));
 			
 			//Assign material color?
 			//Local light or directional? If directional then we need to see if it's shining on the object
@@ -266,7 +371,7 @@ public class RayTracer implements Runnable
 					//trace shadow ray to light source
 					
 					//Turn shadows on and shadowRay hit nothing
-					if(!scene.shadows || shadowTrace(shadowRay))
+					if(DEBUG || !scene.shadows || shadowTrace(shadowRay))
 					{	
 						double LdN = Math.max(0, hit.normal.dot(L));
 						if(LdN > 0)
@@ -279,18 +384,28 @@ public class RayTracer implements Runnable
 							//double cosinePhi = reflec.dot()
 							//If the light is free add the diffuse light
 							//Intensity (Kd * (LdN) + Ks *(RdV)^(shiny)/(r + k)
-							color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN + lights[i].specular[0] * Math.pow(RdV, material.shiny)) / d,
+							/*color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN + lights[i].specular[0] * Math.pow(RdV, material.shiny)) / d,
 														(double)(lights[i].diffuse[1] * LdN + lights[i].specular[1] * Math.pow(RdV, material.shiny)) / d,
 														(double)(lights[i].diffuse[2] * LdN + lights[i].specular[2] * Math.pow(RdV, material.shiny)) / d,
-														1.0) );
+														1.0) );*/
+							
+							//color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN) / d,
+							//		(double)(lights[i].diffuse[1] * LdN ) / d,
+							//		(double)(lights[i].diffuse[2] * LdN ) / d,
+							//		1.0) );
+							
+							color.plus(new DoubleColor( (double)(lights[i].specular[0] * Math.pow(RdV, 100/*material.shiny*/)),
+									(double)(lights[i].specular[1] * Math.pow(RdV, material.shiny)),
+									(double)(lights[i].specular[2] * Math.pow(RdV, material.shiny)),
+									1.0) );
 						}
 					}//*/
 				}
 			}
 			//Shiny Phong
 			//If IdN > 0 then we find a reflection
-			if(scene.reflections && (hit.normal.dot(ray.data[1]) < 0) &&
-					(material.reflectivity.r > 0 || material.reflectivity.g > 0 || material.reflectivity.b > 0))
+			if(DEBUG || !scene.reflections && (hit.normal.dot(ray.data[1]) < 0)
+					&& (material.reflectivity.r > 0 || material.reflectivity.g > 0 || material.reflectivity.b > 0))
 			{
 				hit.depth++;
 				
@@ -303,16 +418,16 @@ public class RayTracer implements Runnable
 				//Scale by distance?
 				//reflection.scale( 1 / reflect.origin().distanceTo(hit.hitP));
 				
-				reflection.r = reflection.r * material.reflectivity.r;
-				reflection.g = reflection.g * material.reflectivity.g;
-				reflection.b = reflection.b * material.reflectivity.b;
+				reflection.r = reflection.r * 1;//material.reflectivity.r;
+				reflection.g = reflection.g * 1;//material.reflectivity.g;
+				reflection.b = reflection.b * 1;//material.reflectivity.b;
 				
 				color.plus( reflection ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
 				hit.depth--;
 			}
 			
-			if(scene.refractions &&// (hit.normal.dot(ray.data[1]) > 0) &&
-					(material.refractivity.r > 0 || material.refractivity.g > 0 || material.refractivity.b > 0))
+			if(DEBUG || scene.refractions //&& (hit.normal.dot(ray.data[1]) > 0) &&
+					&& (material.refractivity.r > 0 || material.refractivity.g > 0 || material.refractivity.b > 0))
 			{
 				hit.depth++;
 
@@ -329,9 +444,9 @@ public class RayTracer implements Runnable
 				Ray refract = new Ray(hit.hitP, refractDir);
 				DoubleColor refraction = trace(refract, hit);
 				
-				refraction.r = refraction.r * material.refractivity.r;
-				refraction.g = refraction.g * material.refractivity.g;
-				refraction.b = refraction.b * material.refractivity.b;
+				refraction.r = refraction.r * 1;//material.refractivity.r;
+				refraction.g = refraction.g * 1;//material.refractivity.g;
+				refraction.b = refraction.b * 1;//material.refractivity.b;
 				
 				//reflection.scale(material.refractivity.r);
 				color.plus( refraction ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)

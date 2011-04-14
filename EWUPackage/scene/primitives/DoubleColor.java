@@ -69,10 +69,12 @@ public class DoubleColor implements Serializable
 		b = b + other.b;
 	}
 	
-	public void scale(double scaleValue){
+	public DoubleColor scale(double scaleValue){
 		r *=scaleValue;
 		g *= scaleValue;
 		b *= scaleValue;
+		
+		return this;
 	}	
 	public float [] toFloatv(){
 		float [] rtn = new float[4];
