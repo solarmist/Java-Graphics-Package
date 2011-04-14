@@ -92,9 +92,11 @@ public class RayTracer implements Runnable
 		{
 			if(i + 1 == THREADS)
 				right = (int) scene.camera.viewportRight;
-		
-			r[i] = new Renderer(left, right,
-								(int)scene.camera.viewportBottom, (int)scene.camera.viewportTop ) ;
+			
+			//Rethink space partitioning for threads! 
+			//r[i] = new Renderer(left, right,
+			r[i] = new Renderer((int)scene.camera.viewportLeft, (int)scene.camera.viewportRight,
+								(int)scene.camera.viewportBottom, (int)scene.camera.viewportTop, i) ;
 			t[i] = new Thread(r[i]);
 			t[i].start();
 
@@ -119,9 +121,10 @@ public class RayTracer implements Runnable
 		//Portion of the viewport to render
 		int xMin, xMax;
 		int yMin, yMax;
+		int startLine;
 		int curX = 0, curY = 0;
 		static final boolean DEBUG = false;
-		static final int DEBUG_recursion = 1;
+		static final int DEBUG_recursion = 5;
 		
 		Renderer()
 		{
@@ -131,12 +134,13 @@ public class RayTracer implements Runnable
 			yMax = (int)scene.camera.viewportTop;
 		}
 		
-		Renderer(int _xMin, int _xMax, int _yMin, int _yMax)
+		Renderer(int _xMin, int _xMax, int _yMin, int _yMax, int line)
 		{
 			xMin = _xMin;
 			xMax = _xMax; 
 			yMin = _yMin; 
 			yMax = _yMax;
+			startLine = line;
 		}
 		
 		@Override
@@ -146,9 +150,9 @@ public class RayTracer implements Runnable
 			Double3D origin = new Double3D(0.0, 0.0, 0.0);
 			
 			//Work though viewport (pixel) coordinates
-			double worldY = scene.camera.windowBottom + yMin * heightRatio;
-			for(curY = yMin; curY < yMax; curY++){
-				worldY += heightRatio;
+			double worldY = scene.camera.windowBottom + (yMin + startLine) * heightRatio;
+			for(curY = yMin + startLine; curY < yMax; curY = curY + THREADS){
+				worldY += THREADS * heightRatio;
 				double worldX = scene.camera.windowLeft + xMin * widthRatio;
 				for(curX = xMin; curX < xMax; curX++){
 					//0,0 in viewport would be -6.90,-5 in world
@@ -207,10 +211,7 @@ public class RayTracer implements Runnable
 						hit.matIndex = i;	//May cause an error if object 10 and it only has 3 materials.
 						hit.index = i;
 					}
-			//Go check for intersection with the bounding sphere, then check for all triangles
 			
-			//Find nearest intersection with scene
-			//Compute intersection point and normal
 			if(hit.index >= 0 )//If it intersects then multi-sample
 				color = shade(ray, hit, shapes[hit.index].materials[hit.matIndex]);
 
@@ -242,6 +243,7 @@ public class RayTracer implements Runnable
 					}
 					else
 						return false;	
+			
 			return true;
 		}
 		
