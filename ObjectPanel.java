@@ -54,7 +54,7 @@ public class ObjectPanel extends JPanel
 
 	ObjectPanel(Scene aSceneRef, ControlPanel aCtrlPanel)
 	{
-		objChooser = new JFileChooser("./TriObjects");
+		objChooser = new JFileChooser("./Objects");
 		filter = new FileExtensionFilter();
 		filter.addExtension("obj");
 		filter.addExtension("3ds");

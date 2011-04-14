@@ -1,0 +1,453 @@
+
+newmtl white
+Ka 0.4000 0.4000 0.4000
+Kd 0.8000 0.8000 0.8000
+Ks 0.3000 0.3000 0.3000
+illum 2
+Ns 60.0000
+
+
+newmtl red
+Ka 1.0000 0.0000 0.0000
+Kd 1.0000 0.0000 0.0000
+Ks 1.0000 0.5000 0.5000
+illum 2
+Ns 60.0000
+
+
+newmtl blue
+Ka 0.0000 0.0000 0.5000
+Kd 0.0000 0.0000 1.0000
+Ks 0.0000 0.0000 0.5000
+illum 2
+Ns 65.8900
+
+
+newmtl lime
+Ka 0.0000 0.5000 0.0000
+Kd 0.0000 1.0000 0.0000
+Ks 0.0000 0.5000 0.0000
+illum 2
+Ns 65.8900
+
+
+newmtl green
+Ka 0.0000 0.2500 0.0000
+Kd 0.0000 0.2500 0.0000
+Ks 0.0000 0.2500 0.0000
+illum 2
+Ns 65.8900
+
+
+newmtl yellow
+Ka 1.0000 0.6667 0.0000
+Kd 1.0000 0.6667 0.0000
+Ks 1.0000 0.6667 0.0000
+illum 2
+Ns 65.8900
+
+
+newmtl purple
+Ka 0.5000 0.0000 1.0000
+Kd 0.5000 0.0000 1.0000
+Ks 0.5000 0.0000 1.0000
+illum 2
+Ns 65.8900
+
+
+newmtl orange
+Ka 1.0000 0.1667 0.0000
+Kd 1.0000 0.1667 0.0000
+Ks 1.0000 0.1667 0.0000
+illum 2
+Ns 65.8900
+
+
+newmtl aqua
+Ka 0.0000 0.5000 0.5000
+Kd 0.0000 0.5000 0.5000
+Ks 0.0000 0.5000 0.5000
+illum 2
+Ns 65.8900
+
+
+newmtl grey
+Ka 0.5000 0.5000 0.5000
+Kd 0.5000 0.5000 0.5000
+Ks 0.5000 0.5000 0.5000
+illum 2
+Ns 65.8900
+
+
+newmtl rubber
+Ka 0.0000 0.0000 0.0000
+Kd 0.0100 0.0100 0.0100
+Ks 0.1000 0.1000 0.1000
+illum 2
+Ns 65.8900
+
+
+newmtl black
+Ka 0.1000 0.1000 0.1000
+Kd 0.1000 0.1000 0.1000
+Ks 0.2000 0.2000 0.2000
+illum 2
+Ns 65.8900
+
+
+newmtl shaqua
+Ka 0.0000 1.0000 1.0000
+Kd 0.0000 1.0000 1.0000
+Ks 0.7755 1.0000 1.0000
+illum 3
+Ns 131.0100
+sharpness 0.0000
+refl -type sphere newscene.tex
+
+
+newmtl shblack
+Ka 0.0000 0.0000 0.0000
+Kd 0.0000 0.0000 0.0000
+Ks 0.8000 0.8000 0.8000
+illum 3
+Ns 100.0000
+sharpness 108.5300
+refl -type sphere newscene.tex
+
+
+newmtl shblue
+Ka 0.0000 0.0000 0.5000
+Kd 0.0000 0.0000 0.5000
+Ks 0.0000 0.0000 0.5000
+illum 3
+Ns 65.8900
+sharpness 60.0000
+refl -type sphere -mm -0.440 1.000 newscene.tex
+
+
+newmtl shgreen
+Ka 0.0000 0.5000 0.0000
+Kd 0.0000 0.5000 0.0000
+Ks 0.0000 0.5000 0.0000
+illum 3
+Ns 65.8900
+sharpness 60.0000
+refl -type sphere newscene.tex
+
+
+newmtl shgrey
+Ka 0.5000 0.5000 0.5000
+Kd 0.5000 0.5000 0.5000
+Ks 0.5000 0.5000 0.5000
+illum 3
+Ns 65.8900
+sharpness 60.0000
+refl -type sphere -mm -0.610 1.000 newscene.tex
+
+newmtl bluegrey
+Ka 0.0000 0.0000 0.7000
+Kd 0.5000 0.5000 0.5000
+Ks 0.5000 0.5000 0.5000
+illum 3
+Ns 65.8900
+sharpness 60.0000
+refl -type sphere -mm -0.610 1.000 newscene.tex
+
+
+newmtl shlime
+Ka 0.0000 1.0000 0.0000
+Kd 0.0000 1.0000 0.0000
+Ks 0.0000 0.5000 0.0000
+illum 3
+Ns 65.8900
+sharpness 60.0000
+refl -type sphere newscene.tex
+
+
+newmtl shorange
+Ka 1.0000 0.1667 0.0000
+Kd 1.0000 0.1667 0.0000
+Ks 0.5000 0.0833 0.0000
+illum 3
+Ns 65.8900
+sharpness 60.0000
+refl -type sphere newscene.tex
+
+
+newmtl shpurple
+Ka 0.5000 0.0000 1.0000
+Kd 0.5000 0.0000 1.0000
+Ks 0.1735 0.0000 0.3469
+illum 3
+Ns 200.0000
+sharpness 60.0000
+refl -type sphere newscene.tex
+
+
+newmtl shred
+Ka 1.0000 0.0083 0.0000
+Kd 1.0000 0.0083 0.0000
+Ks 1.0 1.0 1.0
+illum 3
+Ns 60.0000
+sharpness 60.0000
+refl -type sphere newscene.tex
+
+
+newmtl shrubber
+Ka 0.0000 0.0000 0.0000
+Kd 0.0100 0.0099 0.0099
+Ks 0.0100 0.0100 0.0100
+illum 3
+Ns 65.8900
+sharpness 60.0000
+refl -type sphere newscene.tex
+
+
+newmtl shwhite
+Ka 0.5224 0.5224 0.5224
+Kd 1.0000 1.0000 1.0000
+Ks 1.0000 1.0000 1.0000
+illum 3
+Ns 60.0000
+sharpness 60.0000
+refl -type sphere newscene.tex
+
+
+newmtl shyellow
+Ka 0.7500 0.6250 0.0000
+Kd 0.7500 0.6250 0.0000
+Ks 0.3959 0.3299 0.0000
+illum 3
+Ns 91.4700
+sharpness 83.7200
+refl -type sphere -clamp on newscene.tex
+
+
+newmtl flaqua
+Kd 0.0000 0.5000 0.5000
+illum 0
+
+
+newmtl flblack
+Kd 0.0000 0.0000 0.0000
+illum 0
+
+
+newmtl flblue
+Kd 0.0000 0.0000 1.0000
+illum 0
+
+
+newmtl flgreen
+Kd 0.0000 0.2500 0.0000
+illum 0
+
+
+newmtl flgrey
+Kd 0.5000 0.5000 0.5000
+illum 0
+
+
+newmtl fllime
+Kd 0.0000 1.0000 0.0000
+illum 0
+
+
+newmtl florange
+Kd 1.0000 0.1667 0.0000
+illum 0
+
+
+newmtl flpurple
+Kd 0.5000 0.0000 1.0000
+illum 0
+
+
+newmtl flred
+Kd 1.0000 0.0000 0.0000
+illum 0
+
+
+newmtl flwhite
+Kd 1.0000 1.0000 1.0000
+illum 0
+
+
+newmtl flyellow
+Ka 0.0000 0.0000 0.0000
+Kd 1.0000 0.6667 0.0000
+Ks 0.0000 0.0000 0.0000
+illum 0
+Ns 15.0000
+
+
+newmtl chrome1
+Ka 0.0000 0.0000 0.0000
+Kd 0.0000 0.0000 0.0000
+Ks 1.0000 1.0000 1.0000
+illum 3
+Ns 65.8900
+sharpness 60.0000
+refl -type sphere chrome.tex
+
+
+newmtl blchrome
+Ka 0.0000 0.0026 0.0857
+Kd 0.0000 0.0068 0.1184
+Ks 0.2378 0.2414 0.6776
+illum 3
+Ns 65.8900
+sharpness 60.0000
+refl -type sphere chrome.tex
+
+
+newmtl redchrome
+Ka 0.0857 0.0000 0.0000
+Kd 0.1184 0.0000 0.0000
+Ks 1.0000 0.0000 0.0000
+illum 3
+Ns 65.8900
+sharpness 60.0000
+refl -type sphere chrome.tex
+
+
+newmtl ltchrome
+Ka 0.4204 0.6806 1.0000
+Kd 0.5143 0.6729 1.0000
+Ks 0.0441 0.0470 0.4000
+illum 3
+Ns 65.8900
+sharpness 182.9500
+refl -type sphere -mm 0.070 1.450 chrome.tex
+
+
+newmtl pink
+Ka 0.9959 0.1057 0.1057
+Kd 1.0000 0.1551 0.1551
+Ks 0.7551 0.2311 0.2311
+illum 2
+Ns 60.0000
+
+newmtl skin
+Ka 0.75 0.578 0.578
+Kd 0.75 0.578 0.578
+Ks 0.75 0.578 0.578
+illum 2
+Ns 60.0000
+
+
+newmtl shgold
+Ka 0.0000 0.0000 0.0000
+Kd 0.0000 0.0000 0.0000
+Ks 0.7551 0.3144 0.0000
+illum 3
+Ns 200.0000
+sharpness 165.1200
+refl -type sphere -mm -0.270 1.310 newscene.tex
+
+
+newmtl Glassy 
+Ka 0.0360 0.0400 0.0480
+Kd 0.1440 0.1600 0.1920
+Ks 1.0000 1.0000 1.0000
+illum 2
+Ns 55.0000
+
+newmtl bone
+Ka 0.2000 0.2000 0.2000
+Kd 0.9000 0.9000 0.7000
+Ks 0.2000 0.2000 0.2000
+illum 2
+Ns 20.0000
+
+newmtl br_dkgrey
+Ka 0.1000 0.1000 0.1000
+Kd 0.2000 0.2000 0.2000
+Ks 0.5000 0.5000 0.5000
+illum 2
+Ns 20.0000
+
+newmtl br_grey
+Ka 0.2000 0.2000 0.2000
+Kd 0.5000 0.5000 0.5000
+Ks 0.1000 0.1000 0.1000
+illum 2
+Ns 20.0000
+
+newmtl dkgreen
+Ka 0.0200 0.0300 0.0000
+Kd 0.1600 0.2400 0.0000
+Ks 0.2500 0.3500 0.2500
+illum 2
+Ns 25.0000
+
+newmtl dkgrey
+Ka 0.0500 0.0500 0.0500
+Kd 0.2000 0.2000 0.2000
+Ks 0.5000 0.5000 0.5000
+illum 2
+Ns 65.8900
+
+newmtl dullred
+Ka 0.1000 0.0300 0.0300
+Kd 0.5000 0.1000 0.0400
+Ks 0.4000 0.1000 0.0400
+illum 2
+Ns 20.0000
+
+newmtl fl_dkgrey
+Ka 0.0500 0.0500 0.0500
+Kd 0.2000 0.2000 0.2000
+Ks 0.0000 0.0000 0.0000
+illum 2
+Ns 65.8900
+
+newmtl glass
+Ka 0.0360 0.0400 0.0480
+Kd 0.1440 0.1600 0.1920
+Ks 1.0000 1.0000 1.0000
+illum 2
+Ns 55.0000
+
+newmtl goldchrome
+Ka 0.1000 0.0800 0.0100
+Kd 0.6000 0.4000 0.1000
+Ks 1.0000 0.5000 0.3000
+illum 2
+Ns 65.8900
+
+newmtl dkbrown
+Ka 0.0300 0.0200 0.0100
+Kd 0.2400 0.1600 0.0800
+Ks 0.3500 0.2500 0.2500
+illum 2
+Ns 25.0000
+
+newmtl dkred
+Ka 0.200 0.0000 0.0000
+Kd 0.4 0.0 0.0
+Ks 0.9 0.9 0.9
+illum 2
+Ns 25.0000
+
+newmtl amber
+Ka 0.2 0.11 0.02
+Kd 0.8 0.55 0.1
+Ks 0.9 0.9 0.9
+illum 2
+Ns 25.0000
+
+newmtl wheel
+Ka 0.06 0.06 0.07
+Kd 0.6 0.6 0.7
+Ks 1.0 1.0 1.0
+illum 2
+Ns 50.0000
+
+newmtl tire
+Ka 0.02 0.02 0.02
+Kd 0.07 0.07 0.07
+Ks 0.5 0.5 0.5
+illum 3
+Ns 25.0

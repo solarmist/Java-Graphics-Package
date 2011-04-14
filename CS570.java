@@ -134,6 +134,7 @@ public class CS570 extends JFrame implements Runnable
 		cntrlPanel.objectPanel.changeScenes();
 		cntrlPanel.lightPanel.changeScenes();
                 //cntrlPanel.cameraPanel.changeScenes(); // Camera settings not currently loaded
+		theScene.refreshCanvas();
 	} // end method changeScenes
 
 	public void setTheme(javax.swing.plaf.metal.MetalTheme theme)
