@@ -14,5 +14,6 @@ public class HitRecord {
 	    DoubleColor color;
 	    Double3D uv;       	//We will use this for 2d textures
 	    Double3D hitP;      //The point of intersection
+	    public boolean inMat = false; //Are we inside a material and need to swap n and nt?
 	    //Texture* hitTex;	//The nearest intersected object's texture
 }

@@ -38,17 +38,14 @@ public class ControlPanel extends JPanel
 
 		setLayout(new BorderLayout());
 		tabPane = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.WRAP_TAB_LAYOUT);
+		
 		objectPanel = new ObjectPanel(theScene, this);
 		tabPane.addTab("Objects", objectPanel);
-		cameraPanel = new CameraPanel(theScene);
-		tabPane.addTab("Camera", cameraPanel);
-		lightPanel = new LightPanel(theScene);
-		tabPane.addTab("Lights", lightPanel);
-		fogPanel = new FogPanel(theScene);
-		tabPane.addTab("Fog", fogPanel);
+		
 		rayTracePanel = new RayTracePanel(theScene);
 		tabPane.addTab("RayTracing", rayTracePanel);
 		
+<<<<<<< HEAD
 		try{
 			//ClassLoader load = new ClassLoader();
 			Object o = Class.forName("EWUPackage.panels.PhotonMappingPanel").newInstance();
@@ -63,7 +60,23 @@ public class ControlPanel extends JPanel
 		{
 			System.out.println(e.toString());
 		}
+=======
+		lightPanel = new LightPanel(theScene);
+		tabPane.addTab("Lights", lightPanel);
+		
+		rtp = new PhotonMappingPanel(theScene);
+		tabPane.addTab("Photon Mapping", rtp);
+		
+		cameraPanel = new CameraPanel(theScene);
+		tabPane.addTab("Camera", cameraPanel);
+		
+		
+		fogPanel = new FogPanel(theScene);
+		tabPane.addTab("Fog", fogPanel);
+		
+>>>>>>> Refraction not making it back to the checker board, but it shows objects behind, just not the checker board.
 		add(tabPane, BorderLayout.CENTER);
+		
  	} // end constructor
 
 } // end class ControlPanel

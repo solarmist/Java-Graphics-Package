@@ -12,8 +12,8 @@ public class Sample {
 	{
 		for (int i = 0; i < numSamples; i++) 
 		{
-	        samples[i].x = Rand.nextGaussian(); //Rand.nextGaussian();
-	        samples[i].y = Rand.nextGaussian();
+	        samples[i].x = Rand.nextDouble(); //Rand.nextDouble();
+	        samples[i].y = Rand.nextDouble();
 	    }
 	}
 
@@ -24,8 +24,8 @@ public class Sample {
 	    for (int i = 0; i < sqrtSamples; i++) 
 	        for (int j = 0; j < sqrtSamples; j++) 
 	        {
-	        	double x = (i + Rand.nextGaussian()) / sqrtSamples;
-	        	double y = (j + Rand.nextGaussian()) / sqrtSamples;
+	        	double x = (i + Rand.nextDouble()) / sqrtSamples;
+	        	double y = (j + Rand.nextDouble()) / sqrtSamples;
 	            samples[i * sqrtSamples + j].x = x;
 	            samples[i * sqrtSamples + j].y = y;
 	        }
@@ -36,13 +36,14 @@ public class Sample {
 	{
 		for (int i = 0; i < numSamples; i++) 
 		{
-	        samples[i].x = (i + Rand.nextGaussian()) / numSamples;
-	        samples[i].y = (i + Rand.nextGaussian()) / numSamples;
+	        samples[i].x = (i + Rand.nextDouble()) / numSamples;
+	        samples[i].y = (i + Rand.nextDouble()) / numSamples;
 	    }
+		
 	    //Shuffle the x coords
 	    for (int i = numSamples - 2; i >= 0; i--) 
 	    {
-	        int target = (int) (Rand.nextGaussian() * i);
+	        int target = (int) (Rand.nextDouble() * i);
 	        double temp = samples[i + 1].x;
 	        samples[i + 1].x = samples[target].x;
 	        samples[target].x = temp;
@@ -61,21 +62,22 @@ public class Sample {
 		        {
 		            samples[i * sqrtSamples + j].x = 
 		                i * sqrtSamples * subcellWidth +
-		                j * subcellWidth + Rand.nextGaussian() * subcellWidth;
+		                j * subcellWidth + Rand.nextDouble() * subcellWidth;
 		            samples[i * sqrtSamples + j].y = 
 		                j * sqrtSamples * subcellWidth +
-		                i * subcellWidth + Rand.nextGaussian() * subcellWidth;
+		                i * subcellWidth + Rand.nextDouble() * subcellWidth;
 		        }
 		    
 		    //Shuffle x coords within each column and y coords within each row
 		    for (int i = 0; i < sqrtSamples; i++) 
-		        for (int j = 0; j < sqrtSamples; j++) {
-		            int k = j + (int)(Rand.nextGaussian() * (sqrtSamples - j - 1));
+		        for (int j = 0; j < sqrtSamples; j++) 
+		        {
+		            int k = j + (int)(Rand.nextDouble() * (sqrtSamples - j - 1));
 		            double t = samples[i * sqrtSamples + j].x;
 		            samples[i * sqrtSamples + j].x = samples[i * sqrtSamples + k].x;
 		            samples[i * sqrtSamples + k].x = t;
 		            
-		            k = j + (int)(Rand.nextGaussian() * (sqrtSamples - j - 1));
+		            k = j + (int)(Rand.nextDouble() * (sqrtSamples - j - 1));
 		            t = samples[j * sqrtSamples + i].y;
 		            samples[j * sqrtSamples + i].y = samples[k * sqrtSamples + k].y;
 		            samples[k * sqrtSamples + i].y = t;
@@ -85,7 +87,7 @@ public class Sample {
 	static void shuffle(Double3D[] samples, int numSamples)
 	{
 		  for (int i = numSamples - 2; i < 0; i--){
-		        int target = (int)(Rand.nextGaussian() * i);
+		        int target = (int)(Rand.nextDouble() * i);
 		        Double3D temp = samples[i + 1];
 		        samples[i + 1] = samples[target];
 		        samples[target] = temp;
@@ -137,20 +139,20 @@ public class Sample {
 	static void random(double[] samples, int numSamples)
 	{
 		for (int i = 0; i < numSamples; i++)
-	        samples[i] = Rand.nextGaussian();
+	        samples[i] = Rand.nextDouble();
 	}
 	
 	static void jitter(double[] samples, int numSamples)
 	{
 		for (int i = 0; i < numSamples; i++)
-			samples[i] = (i + Rand.nextGaussian()) / numSamples;
+			samples[i] = (i + Rand.nextDouble()) / numSamples;
 	}
 	
 	static void shuffle(double[] samples, int numSamples)
 	{
 		for (int i = numSamples - 2; i >= 0; i--) 
 		{
-	        int target = (int)Rand.nextGaussian() * i;
+	        int target = (int)Rand.nextDouble() * i;
 	        double temp = samples[i + 1];
 	        samples[i + 1] = samples[target];
 	        samples[target] = temp;

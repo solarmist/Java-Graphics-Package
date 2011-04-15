@@ -71,10 +71,8 @@ public class Sphere implements Shape
 	        //We have a valid hit
 	        record.t = t;
 	        record.hitP = r.pointAtParameter(t);
-	        record.normal = new Double3D(r.origin().x + t * r.direction().x - center.x,
-	        							 r.origin().y + t * r.direction().y - center.y,
-	        							 r.origin().z + t * r.direction().z - center.z);
-	        record.normal.unitize();
+	        record.normal = record.hitP.minus(center).getUnit();
+
 	        //record.color = color;
 	        
 	        return true;
