@@ -16,8 +16,11 @@ public class RayTracer implements Runnable
 	PMesh[] shapes;
 	Sphere[] spheres;
 	Light[] lights;
-	double heightRatio, widthRatio;
+	double xMin, xMax;
+	double yMin, yMax;
 	double vpWidth, vpHeight;
+	double heightRatio, widthRatio;
+	
 	int numObjects;
 	boolean calcViewCoords = true;
 	GLU glu;
@@ -34,14 +37,19 @@ public class RayTracer implements Runnable
 		scene = theScene;
 		lights = scene.lights;
 		
+		xMin = scene.camera.viewportLeft + 0.5;
+		xMax = scene.camera.viewportRight;
+		yMin = scene.camera.viewportBottom + 0.5;
+		yMax = scene.camera.viewportTop;
+		
 		//Transform into camera coords
-		vpWidth = scene.camera.viewportRight - scene.camera.viewportLeft;
-		vpHeight = scene.camera.viewportTop - scene.camera.viewportBottom;
-		widthRatio = scene.camera.windowWidth / vpWidth;
-		heightRatio = scene.camera.windowHeight / vpHeight;
+		vpWidth = xMax - xMin;
+		vpHeight = yMax - yMin;
+		widthRatio = (scene.camera.windowRight - scene.camera.windowLeft) / vpWidth;
+		heightRatio = (scene.camera.windowTop - scene.camera.windowBottom) / vpHeight;
 			
 		//Init the buffer
-		viewPort = new DoubleColor[(int)vpWidth][(int)vpHeight];
+		viewPort = new DoubleColor[(int)vpWidth+1][(int)vpHeight+1];
 		for(int i = 0; i < vpWidth; i++)
 			for(int j = 0; j < vpHeight; j++)
 				viewPort[i][j] = new DoubleColor(0.0, 0.0, 0.0, 1.0);
@@ -80,14 +88,12 @@ public class RayTracer implements Runnable
 	public void run()
 	{	
 		Renderer r[] = new Renderer[THREADS];
-		Thread t[] = new Thread[THREADS];
+		Thread t[] = new Thread[THREADS];		
 		
-		int widthOfThread = (int)vpWidth / THREADS;
 		for(int i = 0; i < THREADS; i++)
 		{	
 			//Rethink space partitioning for threads! 
-			r[i] = new Renderer((int)scene.camera.viewportLeft, (int)scene.camera.viewportRight,
-								(int)scene.camera.viewportBottom, (int)scene.camera.viewportTop, i) ;
+			r[i] = new Renderer(i) ;
 			t[i] = new Thread(r[i]);
 			t[i].start();
 		}
@@ -107,8 +113,6 @@ public class RayTracer implements Runnable
 	public class Renderer implements Runnable
 	{
 		//Portion of the viewport to render
-		int xMin, xMax;
-		int yMin, yMax;
 		int startLine;
 		int curX = 0, curY = 0;
 		int checkerFreq = 200;
@@ -151,12 +155,8 @@ public class RayTracer implements Runnable
 			}
 		}
 		
-		Renderer(int _xMin, int _xMax, int _yMin, int _yMax, int line)
+		Renderer(int line)
 		{
-			xMin = _xMin;
-			xMax = _xMax; 
-			yMin = _yMin; 
-			yMax = _yMax;
 			startLine = line;
 			
 			if(DEBUG || scene.antiAliasing)
@@ -206,19 +206,19 @@ public class RayTracer implements Runnable
 			
 			//Work though viewport (pixel) coordinates
 			//Start in the middle of pixel 0
-			double worldY = scene.camera.windowBottom + (yMin + startLine + 0.5) * heightRatio;
-			for(curY = yMin + startLine; curY < yMax; curY = curY + THREADS){
+			double worldY = scene.camera.windowBottom + (yMin + startLine) * heightRatio;
+			for(curY = (int)yMin + startLine; curY < yMax; curY = curY + THREADS){
 				worldY += THREADS * heightRatio;
 				//Start in the middle of pixel 0
-				double worldX = scene.camera.windowLeft + (xMin + 0.5) * widthRatio;
+				double worldX = scene.camera.windowLeft + (xMin) * widthRatio;
 				
-				for(curX = xMin; curX < xMax; curX++)
+				for(curX = (int)xMin; curX < xMax; curX++)
 				{
 					worldX += widthRatio;
 					Double3D dir = new Double3D(worldX, -worldY, -scene.camera.near);
 					dir.unitize();
 					Ray ray = new Ray(origin, dir);
-								
+		
 					viewPort[curX][curY] = trace(ray, new HitRecord());	//Start at 0 recursive depth
 				}//for y
 			}//for x
@@ -365,48 +365,50 @@ public class RayTracer implements Runnable
 			
 			//Assign material color?
 			//Local light or directional? If directional then we need to see if it's shining on the object
-		if(!background)
-			for(int i = 0; i < lights.length ; i++){
-				if(lights[i].lightSwitch == 1){
-					Double3D L = new Double3D((double)lights[i].position[0], (double)lights[i].position[1], (double)lights[i].position[2]);
-					L = L.minus(hit.hitP).getUnit();
-					Ray shadowRay = new Ray(hit.hitP, L);
-					//trace shadow ray to light source
-					
-					//Turn shadows on and shadowRay hit nothing
-					if(DEBUG || !scene.shadows || shadowTrace(shadowRay))
-					{	
-						double LdN = Math.max(0, hit.normal.dot(L));
-						if(LdN > 0)
-						{
-							//-2(-L.N)N + -L
-							Double3D R = hit.normal.sMult( -2 * hit.normal.dot( L.sMult(-1)) ).plus( L.sMult(-1) );
-							double RdV = Math.max(0, -R.dot(ray.dir) );
-							double d = L.distanceTo(hit.hitP);
-							
-							//double cosinePhi = reflec.dot()
-							//If the light is free add the diffuse light
-							//Intensity (Kd * (LdN) + Ks *(RdV)^(shiny)/(r + k)
-							/*color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN + lights[i].specular[0] * Math.pow(RdV, material.shiny)),// / d,
-														(double)(lights[i].diffuse[1] * LdN + lights[i].specular[1] * Math.pow(RdV, material.shiny)),// / d,
-														(double)(lights[i].diffuse[2] * LdN + lights[i].specular[2] * Math.pow(RdV, material.shiny)),// / d,
-														1.0) );*/
-							
-							color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN) / d,
-									(double)(lights[i].diffuse[1] * LdN ) / d,
-									(double)(lights[i].diffuse[2] * LdN ) / d,
-									1.0) );
-							
-							color.plus(new DoubleColor( (double)(lights[i].specular[0] * Math.pow(RdV, 50/*material.shiny*/)),
-									(double)(lights[i].specular[1] * Math.pow(RdV, material.shiny)),
-									(double)(lights[i].specular[2] * Math.pow(RdV, material.shiny)),
-									1.0) );
-						}
-					}//*/
+			if(!background)
+				for(int i = 0; i < lights.length ; i++){
+					if(lights[i].lightSwitch == 1){
+						Double3D L = new Double3D((double)lights[i].position[0], (double)lights[i].position[1], (double)lights[i].position[2]);
+						L = L.minus(hit.hitP).getUnit();
+						Ray shadowRay = new Ray(hit.hitP, L);
+						//trace shadow ray to light source
+						
+						//Turn shadows on and shadowRay hit nothing
+						if(DEBUG || !scene.shadows || shadowTrace(shadowRay))
+						{	
+							double LdN = Math.max(0, hit.normal.dot(L));
+							if(LdN > 0)
+							{
+								//-2(-L.N)N + -L
+								Double3D R = hit.normal.sMult( -2 * hit.normal.dot( L.sMult(-1)) ).plus( L.sMult(-1) );
+								double RdV = Math.max(0, -R.dot(ray.dir) );
+								double d = L.distanceTo(hit.hitP);
+								
+								//double cosinePhi = reflec.dot()
+								//If the light is free add the diffuse light
+								//Intensity (Kd * (LdN) + Ks *(RdV)^(shiny)/(r + k)
+								/*color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN + lights[i].specular[0] * Math.pow(RdV, material.shiny)),// / d,
+															(double)(lights[i].diffuse[1] * LdN + lights[i].specular[1] * Math.pow(RdV, material.shiny)),// / d,
+															(double)(lights[i].diffuse[2] * LdN + lights[i].specular[2] * Math.pow(RdV, material.shiny)),// / d,
+															1.0) );*/
+								
+								color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN) / d,
+										(double)(lights[i].diffuse[1] * LdN ) / d,
+										(double)(lights[i].diffuse[2] * LdN ) / d,
+										1.0) );
+								
+								color.plus(new DoubleColor( (double)(lights[i].specular[0] * Math.pow(RdV, material.shiny)),
+										(double)(lights[i].specular[1] * Math.pow(RdV, material.shiny)),
+										(double)(lights[i].specular[2] * Math.pow(RdV, material.shiny)),
+										1.0) );
+							}
+						}//*/
+					}
 				}
-			}
+			
 			//Shiny Phong
 			//If IdN > 0 then we find a reflection
+			//If IdN < 0 then we need -normal
 			if(DEBUG || scene.reflections && (hit.normal.dot(ray.dir) < 0)
 					&& (material.reflectivity.r > 0 || material.reflectivity.g > 0 || material.reflectivity.b > 0))
 			{
@@ -510,22 +512,22 @@ public class RayTracer implements Runnable
 		gl.glPushMatrix();
 		gl.glLoadIdentity();
 		
-		gl.glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+		gl.glClearColor(0.8f, 0.2f, 0.2f, 1.0f);
 		
 		gl.glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT); 
 		
 		gl.glPointSize(1.0f);
 		
 		//Set the viewport
-		glu.gluOrtho2D(scene.camera.viewportLeft, scene.camera.viewportRight, scene.camera.viewportTop, scene.camera.viewportBottom);
+		glu.gluOrtho2D(xMin, xMax, yMin, yMax);
 		
 		gl.glBegin(GL_POINTS);
-		
-		for(int x = (int)scene.camera.viewportLeft; x < (int)scene.camera.viewportRight; x++)
-			for(int y = (int)scene.camera.viewportBottom; y < (int)scene.camera.viewportTop; y++)
+				
+		for(int x =(int) (xMin); x < xMax; x++)
+			for(int y =(int)(yMin); y < yMax; y++)
 			{
 				gl.glColor3d(viewPort[x][y].r, viewPort[x][y].g, viewPort[x][y].b);
-				gl.glVertex2i(x,y);
+				gl.glVertex2d(x + 0.5, y + 0.5);
 			}
 		
 		gl.glEnd();
