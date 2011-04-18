@@ -83,22 +83,13 @@ public class RayTracer implements Runnable
 		Thread t[] = new Thread[THREADS];
 		
 		int widthOfThread = (int)vpWidth / THREADS;
-		int left = (int) scene.camera.viewportLeft;
-		int right = left + widthOfThread;
 		for(int i = 0; i < THREADS; i++)
-		{
-			if(i + 1 == THREADS)
-				right = (int) scene.camera.viewportRight;
-			
+		{	
 			//Rethink space partitioning for threads! 
-			//r[i] = new Renderer(left, right,
 			r[i] = new Renderer((int)scene.camera.viewportLeft, (int)scene.camera.viewportRight,
 								(int)scene.camera.viewportBottom, (int)scene.camera.viewportTop, i) ;
 			t[i] = new Thread(r[i]);
 			t[i].start();
-
-			left = right;
-			right += widthOfThread;
 		}
 			
 		boolean finishedRendering = false;
@@ -125,8 +116,8 @@ public class RayTracer implements Runnable
 	    Double3D imageSamples[];
 	    boolean sampled = true;
 	    
-	    DoubleColor black = new DoubleColor(0, 0, 0 ,1);
-		DoubleColor white = new DoubleColor(1, 1, 1 ,1);
+	    MaterialCell black = new MaterialCell();
+	    MaterialCell white = new MaterialCell();
 	    
 	    static final boolean DEBUG = false;
 		static final int DEBUG_recursion = 10;
@@ -197,6 +188,22 @@ public class RayTracer implements Runnable
 			//Always tracing from the origin here.
 			Double3D origin = new Double3D(0.0, 0.0, 0.0);
 			
+			black.ka = new DoubleColor(0, 0, 0, 1);
+			black.kd = new DoubleColor(0, 0, 0, 1);
+			black.ks = new DoubleColor(0, 0, 0, 1);
+			black.shiny = 0;
+			black.refractiveIndex = 1;
+			black.reflectivity = new DoubleColor(0, 0, 0, 1);
+			black.refractivity = new DoubleColor(0, 0, 0, 1);
+			
+			white.ka = new DoubleColor(1, 1, 1, 1);
+			white.kd = new DoubleColor(0, 0, 0, 1);
+			white.ks = new DoubleColor(0, 0, 0, 1);
+			white.shiny = 0;
+			white.refractiveIndex = 1;
+			white.reflectivity = new DoubleColor(0, 0, 0, 1);
+			white.refractivity = new DoubleColor(0, 0, 0, 1);
+			
 			//Work though viewport (pixel) coordinates
 			//Start in the middle of pixel 0
 			double worldY = scene.camera.windowBottom + (yMin + startLine + 0.5) * heightRatio;
@@ -218,12 +225,13 @@ public class RayTracer implements Runnable
 		}
 		
 		//Display checker board background
-		DoubleColor checkerBackgroundHit(Ray r, HitRecord hit)
+		MaterialCell checkerBackgroundHit(Ray r, HitRecord hit)
 		{	
 			//Find the t value where z = scene.camera.far
-			double t = -scene.camera.far / r.data[1].z; 
+			hit.t = -scene.camera.far / r.dir.z; 
 			
-			hit.hitP = r.pointAtParameter(t);
+			hit.hitP = r.pointAtParameter(hit.t);
+			hit.normal = new Double3D(0,0,1);
 			hit.hitP.x = (hit.hitP.x > 0)? hit.hitP.x : -hit.hitP.x + checkerFreq / 2;
 			hit.hitP.y = (hit.hitP.y > 0)? hit.hitP.y : -hit.hitP.y + checkerFreq / 2;
 			
@@ -240,6 +248,7 @@ public class RayTracer implements Runnable
 		}
 		
 		//All rays we deal with here are in world coordinates.
+		//Should take the refractive index of the material it is currently in.
 		DoubleColor trace(Ray ray, HitRecord hit)
 		{
 			DoubleColor color = new DoubleColor(0.0, 0.0, 0.0, 1.0);
@@ -292,13 +301,13 @@ public class RayTracer implements Runnable
 					//Only sample once
 					sampled = true;
 					
-					Double3D dir = ray.data[1];
+					Double3D dir = ray.dir;
 					DoubleColor antiAlias = new DoubleColor(0,0,0,1);
 					
 					for(int i = 0; i < samples; i++)
 					{
-						ray.data[1].x = dir.x + imageSamples[i].x;
-						ray.data[1].y = dir.y + imageSamples[i].y;
+						ray.dir.x = dir.x + imageSamples[i].x;
+						ray.dir.y = dir.y + imageSamples[i].y;
 
 						antiAlias.plus( trace(ray, new HitRecord()));
 					}
@@ -307,11 +316,11 @@ public class RayTracer implements Runnable
 					color.plus(antiAlias);
 				}
 				else
-					color = shade(ray, hit, shapes[hit.index].materials[hit.matIndex]);
+					color = shade(ray, hit, shapes[hit.index].materials[hit.matIndex], false);
 			}
 			else//We hit nothing check for intersection with the far clip plane for checker board pattern.
 				if(!scene.checkerBackground)
-					color = checkerBackgroundHit(ray, hit);
+					color = shade(ray, hit, checkerBackgroundHit(ray, hit), true);
 				
 			return color;
 		}
@@ -346,7 +355,7 @@ public class RayTracer implements Runnable
 		}
 		
 		//iPoint is the point of intersection with the surface.
-		DoubleColor shade(Ray ray, HitRecord hit, MaterialCell material)
+		DoubleColor shade(Ray ray, HitRecord hit, MaterialCell material, boolean background)
 		{
 			DoubleColor color = new DoubleColor(0.0, 0.0, 0.0, 1.0);
 			
@@ -356,6 +365,7 @@ public class RayTracer implements Runnable
 			
 			//Assign material color?
 			//Local light or directional? If directional then we need to see if it's shining on the object
+		if(!background)
 			for(int i = 0; i < lights.length ; i++){
 				if(lights[i].lightSwitch == 1){
 					Double3D L = new Double3D((double)lights[i].position[0], (double)lights[i].position[1], (double)lights[i].position[2]);
@@ -371,7 +381,7 @@ public class RayTracer implements Runnable
 						{
 							//-2(-L.N)N + -L
 							Double3D R = hit.normal.sMult( -2 * hit.normal.dot( L.sMult(-1)) ).plus( L.sMult(-1) );
-							double RdV = Math.max(0, -R.dot(ray.data[1]) );
+							double RdV = Math.max(0, -R.dot(ray.dir) );
 							double d = L.distanceTo(hit.hitP);
 							
 							//double cosinePhi = reflec.dot()
@@ -397,46 +407,43 @@ public class RayTracer implements Runnable
 			}
 			//Shiny Phong
 			//If IdN > 0 then we find a reflection
-			if(DEBUG || scene.reflections && (hit.normal.dot(ray.data[1]) < 0))
-					//&& (material.reflectivity.r > 0 || material.reflectivity.g > 0 || material.reflectivity.b > 0))
+			if(DEBUG || scene.reflections && (hit.normal.dot(ray.dir) < 0)
+					&& (material.reflectivity.r > 0 || material.reflectivity.g > 0 || material.reflectivity.b > 0))
 			{
 				hit.depth++;
 				
-				Double3D I = ray.data[1];
-				Double3D N = hit.normal;
 				//R = I - 2 * (I.N)N
 				Double3D R = new Double3D();
-				R = I.minus( N.sMult( 2* N.dot(I)) );
-				//if(specularDirection(1.0, 1.5, hit.normal, ray.data[1], R))
-				{
+				R = ray.dir.plus( hit.normal.sMult( -2* hit.normal.dot(ray.dir)) );
 					
-					Ray reflect = new Ray(hit.hitP, R.getUnit());
-					DoubleColor reflection = trace(reflect, hit);
-					
-					//Scale by distance?
-					//reflection.scale( 1 / reflect.origin().distanceTo(hit.hitP));
-					
-					reflection.r = reflection.r * .1;//material.reflectivity.r;
-					reflection.g = reflection.g * .1;//material.reflectivity.g;
-					reflection.b = reflection.b * .1;//material.reflectivity.b;
-					
-					color.plus( reflection ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
-				}
+				Ray reflect = new Ray(hit.hitP, R.getUnit(), ray.n);
+				DoubleColor reflection = trace(reflect, hit);
+				
+				//Scale by distance?
+				//reflection.scale( 1 / reflect.origin().distanceTo(hit.hitP));
+				
+				reflection.r = reflection.r * material.reflectivity.r;
+				reflection.g = reflection.g * material.reflectivity.g;
+				reflection.b = reflection.b * material.reflectivity.b;
+				
+				color.plus( reflection ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
+				
 				hit.depth--;
 			}
 			
-			if(DEBUG || !scene.refractions) //&& (hit.normal.dot(ray.data[1]) > 0) &&
-					//&& (material.refractivity.r > 0 || material.refractivity.g > 0 || material.refractivity.b > 0))
+			if(DEBUG || !scene.refractions //&& (hit.normal.dot(ray.data[1]) > 0) &&
+					&& (material.refractivity.r > 0 || material.refractivity.g > 0 || material.refractivity.b > 0))
 			{
 				hit.depth++;
 
 				Double3D refractDir = new Double3D(); 
-				double n = 1;
-				double nt = 1.5;
+				double n = ray.n;
+				double nt = material.refractiveIndex;
+				ray.nt = material.refractiveIndex;
 				
 				if(transmissionDirection(n, nt, ray, hit, refractDir))
 				{
-					Ray refract = new Ray(hit.hitP, ray.data[1].getUnit());
+					Ray refract = new Ray(hit.hitP, ray.dir.getUnit(), ray.nt, ray.n);
 					DoubleColor refraction = trace(refract, hit);
 					
 					refraction.r = refraction.r * .8;//material.refractivity.r;
@@ -452,89 +459,40 @@ public class RayTracer implements Runnable
 			return color;
 		}
 		
-		boolean specularDirection(double n, double nt, Double3D N, Double3D vIn, Double3D reflection)
-		{
-			double scale;
-			double R0 = 0;
-			DoubleColor ratio = new DoubleColor();
-			double cosine = vIn.dot(N);
-			
-			if(cosine < 0.0)//Ray is incoming
-			{
-				reflection = vIn.minus(N.sMult(2 * vIn.dot(N)));
-				
-				//Since we are assuming dielectrics are embedded in air no need to
-				//check for the total internal reflection here
-				double temp1 = 1.0 - cosine;
-				scale = R0 + (1.0 - R0) * temp1*temp1*temp1*temp1*temp1;
-			}
-			else//Ray is outgoing
-			{
-				reflection = vIn.minus(N.sMult(2 * vIn.dot(N)));
-				double temp2 = -vIn.dot(N.sMult(-1.0));
-				double root = 1.0 - nt*nt * (1.0 - temp2*temp2);
-				
-				if(root < 0.0)//Total internal refraction
-					scale = 1.0;
-				else
-				{
-					double temp3 = 1.0 - cosine;
-					scale = R0 + (1.0 - R0) * temp3*temp3*temp3*temp3*temp3;
-				}
-				
-				double temp1 = 1.0 - cosine;
-				scale = R0 + (1.0 - R0) * temp1*temp1*temp1*temp1*temp1;
-			}
-			return true;
-		}
-		
 		boolean transmissionDirection(double n, double nt, Ray ray, HitRecord hit, Double3D transmission) 
 		{
-			if(hit.inMat)
-			{
-				double temp = n;
-				n = nt;
-				nt = temp;
-			}
 			
-			hit.inMat = !hit.inMat;
+			/*// calculate refraction
+			float refr = prim->GetMaterial()->GetRefraction();
+			float nt = prim->GetMaterial()->GetRefrIndex();
+			float nRatio = n / nt;
 			
-			Double3D normal = hit.normal.sMult(-1);
-			Double3D d = ray.direction();
 			
-			double cosine = d.dot(normal);
+			vector3 N = prim->GetNormal( pi ) * (float)result;
+			float cosI = -DOT( N, a_Ray.GetDirection() );
+			float cosT2 = 1.0f - nRatio * nRatio * (1.0f - cosI * cosI);
+			if (cosT2 > 0.0f)
+				vector3 T = (nRatio * a_Ray.GetDirection()) + (nRatio * cosI - sqrtf( cosT2 )) * N;
+				= nRatio *(D + cosI - sqrt(cosT2))*N
+			*/
+			
+			Double3D N = hit.normal.sMult(-1);
+			Double3D D = ray.dir;
+			
+			double cosine = -D.dot(N);
 		    double nRatio = n / nt;
-		    
-		    if (cosine < 0.0f) //Ray is incoming 
+
+		    double cosinePSq = 1.0 - nRatio * nRatio * (1.0f - cosine * cosine);
+		        
+		    //check for total internal refraction here
+		    if (cosinePSq < 0.0f)
+		    	return false;   //total internal refraction
+		    else
 		    {
-		        cosine = -cosine;
-		        double cosinePrimeSq = 1.0 - nRatio * nRatio * (1.0f - cosine * cosine);
-		        
-		        //Since assuming dielectrics are embedded in air no need to 
-		        //check for total internal refraction here
-		        if (cosinePrimeSq < 0.0f)
-		            return false;   //total internal refraction
-		        else
-		        {
-		        	Double3D pOne = d.minus(normal.sMult(normal.dot(d))).sMult(nRatio);
-		        	transmission = pOne.plus( normal.sMult( nRatio * cosine - Math.sqrt(cosinePrimeSq)) );
-		        }
-		        
-		    }
-		    else{   //Ray is outgoing
-		    	double temp2 = -d.dot(normal.sMult(-1.0));
-		    	//cosine = -vIn.dot(normal.sMult(-1.0));
-		        //cosine = vIn.dot(normal);
-		    	nRatio =  1 / nRatio;
-		        double cosinePrimeSq = 1.0 - nRatio * nRatio * (1.0f - temp2*temp2);
-		        
-		        if (cosinePrimeSq < 0.0f)
-		            return false;   //total internal refraction
-		        else
-		        {
-		        	Double3D pOne = d.minus( normal.sMult(normal.dot(d)) ).sMult(nRatio);
-			        transmission = pOne.minus( normal.sMult( nRatio * cosine - Math.sqrt(cosinePrimeSq)) );    
-		        }
+		    	//D - N(N.D)
+		    	//Double3D pOne = D.minus( N.sMult(N.dot(D)) ).sMult(nRatio);
+		    	double inside = nRatio * cosine - Math.sqrt(cosinePSq);
+		       	transmission = D.sMult(nRatio).plus(N.sMult(inside));
 		    }
 		    return true;
 		}

@@ -46,12 +46,12 @@ public class Sphere implements Shape
 	public boolean hit(Ray r, double tMin, double tMax, double time,
 			HitRecord record) 
 	{
-	    Double3D temp = new Double3D(r.origin().x - center.x,
-	    							 r.origin().y - center.y,
-	    							 r.origin().z - center.z);
+	    Double3D temp = new Double3D(r.origin.x - center.x,
+	    							 r.origin.y - center.y,
+	    							 r.origin.z - center.z);
 	    
-	    double a = r.direction().dot(r.direction());
-	    double b = 2 * r.direction().dot(temp);
+	    double a = r.dir.dot(r.dir);
+	    double b = 2 * r.dir.dot(temp);
 	    double c = temp.dot(temp) - radius * radius;
 	    
 	    double discriminant = b * b - 4 * a * c;
@@ -84,12 +84,12 @@ public class Sphere implements Shape
 	@Override
 	public boolean shadowHit(Ray r, double tMin, double tMax, double time) 
 	{
-		Double3D temp = new Double3D(r.origin().x - center.x,
-				r.origin().y - center.y,
-				r.origin().z - center.z);
+		Double3D temp = new Double3D(r.origin.x - center.x,
+				r.origin.y - center.y,
+				r.origin.z - center.z);
 
-		double a = r.direction().dot(r.direction());
-		double b = 2 * r.direction().dot(temp);
+		double a = r.dir.dot(r.dir);
+		double b = 2 * r.dir.dot(temp);
 		double c = temp.dot(temp) - radius * radius;
 
 		double discriminant = b * b - 4 * a * c;

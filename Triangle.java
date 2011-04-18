@@ -53,13 +53,13 @@ public class Triangle implements Shape
 	    double E = p0.y - p2.y;
 	    double F = p0.z - p2.z;
 	    
-	    double G = r.data[1].x;
-	    double H = r.data[1].y;
-	    double I = r.data[1].z;
+	    double G = r.dir.x;
+	    double H = r.dir.y;
+	    double I = r.dir.z;
 	    
-	    double J = p0.x - r.data[0].x;
-	    double K = p0.y - r.data[0].y;
-	    double L = p0.z - r.data[0].z;
+	    double J = p0.x - r.origin.x;
+	    double K = p0.y - r.origin.y;
+	    double L = p0.z - r.origin.z;
 	    
 	    double EIHF = E * I - H * F;
 	    double GFDI = G * F - D * I;
@@ -105,13 +105,13 @@ public class Triangle implements Shape
 	    double E = p0.y - p2.y;
 	    double F = p0.z - p2.z;
 	    
-	    double G = r.data[1].x;
-	    double H = r.data[1].y;
-	    double I = r.data[1].z;
+	    double G = r.dir.x;
+	    double H = r.dir.y;
+	    double I = r.dir.z;
 	    
-	    double J = p0.x - r.data[0].x;
-	    double K = p0.y - r.data[0].y;
-	    double L = p0.z - r.data[0].z;
+	    double J = p0.x - r.origin.x;
+	    double K = p0.y - r.origin.y;
+	    double L = p0.z - r.origin.z;
 	    
 	    double EIHF = E * I - H * F;
 	    double GFDI = G * F - D * I;
@@ -150,13 +150,13 @@ public class Triangle implements Shape
 	    double E = p0.y - p2.y;
 	    double F = p0.z - p2.z;
 	    
-	    double G = r.data[1].x;
-	    double H = r.data[1].y;
-	    double I = r.data[1].z;
+	    double G = r.dir.x;
+	    double H = r.dir.y;
+	    double I = r.dir.z;
 	    
-	    double J = p0.x - r.data[0].x;
-	    double K = p0.y - r.data[0].y;
-	    double L = p0.z - r.data[0].z;
+	    double J = p0.x - r.origin.x;
+	    double K = p0.y - r.origin.y;
+	    double L = p0.z - r.origin.z;
 	    
 	    double EIHF = E * I - H * F;
 	    double GFDI = G * F - D * I;
@@ -201,13 +201,13 @@ public class Triangle implements Shape
 	    double E = p0.y - p2.y;
 	    double F = p0.z - p2.z;
 	    
-	    double G = r.data[1].x;
-	    double H = r.data[1].y;
-	    double I = r.data[1].z;
+	    double G = r.dir.x;
+	    double H = r.dir.y;
+	    double I = r.dir.z;
 	    
-	    double J = p0.x - r.data[0].x;
-	    double K = p0.y - r.data[0].y;
-	    double L = p0.z - r.data[0].z;
+	    double J = p0.x - r.origin.x;
+	    double K = p0.y - r.origin.y;
+	    double L = p0.z - r.origin.z;
 	    
 	    double EIHF = E * I - H * F;
 	    double GFDI = G * F - D * I;
