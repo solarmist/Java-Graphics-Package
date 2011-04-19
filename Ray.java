@@ -12,6 +12,7 @@ public class Ray{
 	public Double3D dir;
 	public double n = 1.0;
 	public double nt = 1.0;
+	public boolean inside = false;
 	
     public Ray(){
     	this.origin = new Double3D();
@@ -39,7 +40,7 @@ public class Ray{
     	n = _n;
     }
 	
-	public Ray(Double3D a, Double3D b, double _n, double _nt){
+	public Ray(Double3D a, Double3D b, double _n, double _nt, boolean _inside){
 		this.dir = new Double3D();
 		this.origin = new Double3D();
 		//this.data = new Double3D[2];
@@ -49,14 +50,9 @@ public class Ray{
     	this.dir = b;
     	n = _n;
     	nt = _nt;
+    	inside = _inside;
 	}
 	
-	/*Double3D origin()  {
-		return origin;
-	}*/
-	/*Double3D direction(){
-		return data[1];
-	}*/
 	Double3D pointAtParameter(double t){
 		return new Double3D(origin.x + t * dir.x,
 				origin.y + t * dir.y,

@@ -10,7 +10,7 @@ import javax.media.opengl.glu.*;
 
 public class RayTracer implements Runnable
 {
-	final int THREADS = 1;
+	final int THREADS = 8;
 	DoubleColor viewPort[][];
 	Scene scene;
 	PMesh[] shapes;
@@ -124,7 +124,7 @@ public class RayTracer implements Runnable
 	    MaterialCell white = new MaterialCell();
 	    
 	    static final boolean DEBUG = false;
-		static final int DEBUG_recursion = 10;
+		static final int DEBUG_recursion = 3;
 		static final int DEBUG_samples = 5;
 		
 		Renderer()
@@ -215,11 +215,11 @@ public class RayTracer implements Runnable
 				for(curX = (int)xMin; curX < xMax; curX++)
 				{
 					worldX += widthRatio;
-					Double3D dir = new Double3D(worldX, -worldY, -scene.camera.near);
+					Double3D dir = new Double3D(worldX, worldY, -scene.camera.near);
 					dir.unitize();
 					Ray ray = new Ray(origin, dir);
 		
-					viewPort[curX][curY] = trace(ray, new HitRecord());	//Start at 0 recursive depth
+					viewPort[curX][curY] = trace(ray);	//Start at 0 recursive depth
 				}//for y
 			}//for x
 		}
@@ -249,9 +249,10 @@ public class RayTracer implements Runnable
 		
 		//All rays we deal with here are in world coordinates.
 		//Should take the refractive index of the material it is currently in.
-		DoubleColor trace(Ray ray, HitRecord hit)
+		DoubleColor trace(Ray ray)
 		{
 			DoubleColor color = new DoubleColor(0.0, 0.0, 0.0, 1.0);
+			HitRecord hit = new HitRecord();
 			
 			if(hit.depth > Math.max(DEBUG_recursion, scene.maxRecursiveDepth))
 				return color;
@@ -309,7 +310,7 @@ public class RayTracer implements Runnable
 						ray.dir.x = dir.x + imageSamples[i].x;
 						ray.dir.y = dir.y + imageSamples[i].y;
 
-						antiAlias.plus( trace(ray, new HitRecord()));
+						antiAlias.plus( trace(ray));
 					}
 					antiAlias.scale(1 / samples);
 					
@@ -397,12 +398,12 @@ public class RayTracer implements Runnable
 										(double)(lights[i].diffuse[2] * LdN ) / d,
 										1.0) );
 								
-								color.plus(new DoubleColor( (double)(lights[i].specular[0] * Math.pow(RdV, material.shiny)),
+								/*color.plus(new DoubleColor( (double)(lights[i].specular[0] * Math.pow(RdV, material.shiny)),
 										(double)(lights[i].specular[1] * Math.pow(RdV, material.shiny)),
 										(double)(lights[i].specular[2] * Math.pow(RdV, material.shiny)),
-										1.0) );
+										1.0) );//*/
 							}
-						}//*/
+						}
 					}
 				}
 			
@@ -419,7 +420,7 @@ public class RayTracer implements Runnable
 				R = ray.dir.plus( hit.normal.sMult( -2* hit.normal.dot(ray.dir)) );
 					
 				Ray reflect = new Ray(hit.hitP, R.getUnit(), ray.n);
-				DoubleColor reflection = trace(reflect, hit);
+				DoubleColor reflection = trace(reflect);
 				
 				//Scale by distance?
 				//reflection.scale( 1 / reflect.origin().distanceTo(hit.hitP));
@@ -439,20 +440,19 @@ public class RayTracer implements Runnable
 				hit.depth++;
 
 				Double3D refractDir = new Double3D(); 
-				double n = ray.n;
-				double nt = material.refractiveIndex;
-				ray.nt = material.refractiveIndex;
+				if(!ray.inside)
+					ray.nt = material.refractiveIndex;
 				
-				if(transmissionDirection(n, nt, ray, hit, refractDir))
+				if(transmissionDirection(ray, hit, refractDir))
 				{
-					Ray refract = new Ray(hit.hitP, ray.dir.getUnit(), ray.nt, ray.n);
-					DoubleColor refraction = trace(refract, hit);
+					Ray refract = new Ray(hit.hitP, refractDir.getUnit(), ray.n, ray.nt, ray.inside);
+					DoubleColor refraction = trace(refract);
 					
 					refraction.r = refraction.r * .8;//material.refractivity.r;
 					refraction.g = refraction.g * .8;//material.refractivity.g;
 					refraction.b = refraction.b * .8;//material.refractivity.b;
 					
-					//reflection.scale(material.refractivity.r);
+					//Scale for distance?
 					color.plus( refraction ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
 				}
 				
@@ -461,7 +461,7 @@ public class RayTracer implements Runnable
 			return color;
 		}
 		
-		boolean transmissionDirection(double n, double nt, Ray ray, HitRecord hit, Double3D transmission) 
+		boolean transmissionDirection(Ray ray, HitRecord hit, Double3D transmission) 
 		{
 			
 			/*// calculate refraction
@@ -477,11 +477,16 @@ public class RayTracer implements Runnable
 				vector3 T = (nRatio * a_Ray.GetDirection()) + (nRatio * cosI - sqrtf( cosT2 )) * N;
 				= nRatio *(D + cosI - sqrt(cosT2))*N
 			*/
+			double n = ray.n;
+			double nt = ray.nt;
 			
 			Double3D N = hit.normal.sMult(-1);
 			Double3D D = ray.dir;
 			
 			double cosine = -D.dot(N);
+			if(n < nt)//We're inside, so reverse the normal
+				cosine =  -D.dot(N.sMult(-1));
+			
 		    double nRatio = n / nt;
 
 		    double cosinePSq = 1.0 - nRatio * nRatio * (1.0f - cosine * cosine);
@@ -494,8 +499,15 @@ public class RayTracer implements Runnable
 		    	//D - N(N.D)
 		    	//Double3D pOne = D.minus( N.sMult(N.dot(D)) ).sMult(nRatio);
 		    	double inside = nRatio * cosine - Math.sqrt(cosinePSq);
-		       	transmission = D.sMult(nRatio).plus(N.sMult(inside));
+		    	Double3D temp = D.sMult(nRatio).plus(N.sMult(inside));
+		       	transmission.x = temp.x;
+		       	transmission.y = temp.y;
+		       	transmission.z = temp.z;
 		    }
+		    ray.n = nt;
+		    ray.nt = n;
+		    ray.inside = !ray.inside;
+		    
 		    return true;
 		}
 	}
