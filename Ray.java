@@ -10,52 +10,48 @@ public class Ray{
 	//public Double3D data[];
 	public Double3D origin;
 	public Double3D dir;
+
+	//Stack of rays to get back to original n
+	Ray fromRefract = null;
+	Refract r = null;
 	
-	//We need a stack of these to keep track of from and to when intersecting multiple objects
-	public double n = 1.0;
-	public double nt = 1.0;
-	public boolean inside = false;
+	class Refract
+	{
+		public double n = 1.0;
+		public int objectNum = -1;
+		public Refract prevR = null;
+	}
 	
     public Ray(){
     	this.origin = new Double3D();
     	this.dir = new Double3D();
+    	this.r = new Refract();
 	}
     
 	public Ray(Double3D a, Double3D b){
 		this.dir = new Double3D();
 		this.origin = new Double3D();
-		//this.data = new Double3D[2];
-    	//this.data[0] = a; 
-    	//this.data[1] = b;
     	this.origin = a;
-    	this.dir = b;
+    	this.dir = b.getUnit();
+    	this.r = new Refract();
 	}
 	
-	public Ray(Double3D a, Double3D b, double _n){
+	/*public Ray(Double3D a, Double3D b){
 		this.dir = new Double3D();
 		this.origin = new Double3D();
-		//this.data = new Double3D[2];
-    	//this.data[0] = a; 
-    	//this.data[1] = b;
     	this.origin = a;
-    	this.dir = b;
-    	//Same medium
-    	n = _n;
-    	nt = _n;
+    	this.dir = b.getUnit();
     }
 	
-	public Ray(Double3D a, Double3D b, double _n, double _nt, boolean _inside){
+	/*public Ray(Double3D a, Double3D b){
 		this.dir = new Double3D();
 		this.origin = new Double3D();
-		//this.data = new Double3D[2];
-    	//this.data[0] = a; 
-    	//this.data[1] = b;
     	this.origin = a;
     	this.dir = b;
     	n = _n;
     	nt = _nt;
     	inside = _inside;
-	}
+	}*/
 	
 	Double3D pointAtParameter(double t){
 		return new Double3D(origin.x + t * dir.x,

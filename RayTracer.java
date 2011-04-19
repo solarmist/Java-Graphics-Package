@@ -10,7 +10,7 @@ import javax.media.opengl.glu.*;
 
 public class RayTracer implements Runnable
 {
-	final int THREADS = 8;
+	final int THREADS = 16;
 	DoubleColor viewPort[][];
 	Scene scene;
 	PMesh[] shapes;
@@ -119,12 +119,13 @@ public class RayTracer implements Runnable
 		int samples;
 	    Double3D imageSamples[];
 	    boolean sampled = true;
+	    int depth = 0;
 	    
 	    MaterialCell black = new MaterialCell();
 	    MaterialCell white = new MaterialCell();
 	    
 	    static final boolean DEBUG = false;
-		static final int DEBUG_recursion = 3;
+		static final int DEBUG_recursion = 5;
 		static final int DEBUG_samples = 5;
 		
 		Renderer()
@@ -159,7 +160,7 @@ public class RayTracer implements Runnable
 		{
 			startLine = line;
 			
-			if(DEBUG || scene.antiAliasing)
+			if(scene.antiAliasing)
 			{
 				sampled = false;
 				
@@ -222,6 +223,8 @@ public class RayTracer implements Runnable
 					viewPort[curX][curY] = trace(ray);	//Start at 0 recursive depth
 				}//for y
 			}//for x
+			
+			System.out.println("Thread " + startLine + " finished.");
 		}
 		
 		//Display checker board background
@@ -254,7 +257,7 @@ public class RayTracer implements Runnable
 			DoubleColor color = new DoubleColor(0.0, 0.0, 0.0, 1.0);
 			HitRecord hit = new HitRecord();
 			
-			if(hit.depth > Math.max(DEBUG_recursion, scene.maxRecursiveDepth))
+			if(depth > Math.max(DEBUG_recursion, scene.maxRecursiveDepth))
 				return color;
 			
 			double tMin = 0.00001;
@@ -281,6 +284,7 @@ public class RayTracer implements Runnable
 									if(Triangle.hit(v[0],v[1],v[2],ray, tMin, tMax, 0, hit))
 									{ 
 										tMax = hit.t;
+										hit.normal = poly.normal;
 										hit.matIndex = s.material;
 										hit.index = i;
 									}
@@ -297,7 +301,7 @@ public class RayTracer implements Runnable
 			
 			if(hit.index >= 0 )//If it intersects then multi-sample
 			{
-				if(!sampled && hit.depth == 0)
+				if(!sampled && depth == 0)
 				{
 					//Only sample once
 					sampled = true;
@@ -328,6 +332,9 @@ public class RayTracer implements Runnable
 		
 		boolean shadowTrace(Ray ray)
 		{
+			if(depth > Math.max(DEBUG_recursion, scene.maxRecursiveDepth))
+				return false;
+			
 			for(int i = 0; i < numObjects; i++)
 				//Spheres only for now
 				if(spheres[i].shadowHit(ray, 0.00001, 10000000, 0))
@@ -367,15 +374,18 @@ public class RayTracer implements Runnable
 			//Assign material color?
 			//Local light or directional? If directional then we need to see if it's shining on the object
 			if(!background)
+			{
 				for(int i = 0; i < lights.length ; i++){
 					if(lights[i].lightSwitch == 1){
-						Double3D L = new Double3D((double)lights[i].position[0], (double)lights[i].position[1], (double)lights[i].position[2]);
+						Double3D L = new Double3D(	(double)lights[i].position[0], 
+													(double)lights[i].position[1], 
+													(double)lights[i].position[2]);
 						L = L.minus(hit.hitP).getUnit();
 						Ray shadowRay = new Ray(hit.hitP, L);
 						//trace shadow ray to light source
 						
 						//Turn shadows on and shadowRay hit nothing
-						if(DEBUG || !scene.shadows || shadowTrace(shadowRay))
+						if(!scene.shadows || shadowTrace(shadowRay))
 						{	
 							double LdN = Math.max(0, hit.normal.dot(L));
 							if(LdN > 0)
@@ -499,15 +509,11 @@ public class RayTracer implements Runnable
 		    	//D - N(N.D)
 		    	//Double3D pOne = D.minus( N.sMult(N.dot(D)) ).sMult(nRatio);
 		    	double inside = nRatio * cosine - Math.sqrt(cosinePSq);
-		    	Double3D temp = D.sMult(nRatio).plus(N.sMult(inside));
-		       	transmission.x = temp.x;
-		       	transmission.y = temp.y;
-		       	transmission.z = temp.z;
+		    	Double3D temp = D.sMult(nRatio).plus(N.sMult(inside)).getUnit();
+		       	transmission.dir.x = temp.x;
+		       	transmission.dir.y = temp.y;
+		       	transmission.dir.z = temp.z;
 		    }
-		    ray.n = nt;
-		    ray.nt = n;
-		    ray.inside = !ray.inside;
-		    
 		    return true;
 		}
 	}
