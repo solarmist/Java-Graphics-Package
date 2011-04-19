@@ -232,6 +232,8 @@ public class RayTracer implements Runnable
 		{	
 			//Find the t value where z = scene.camera.far
 			hit.t = -scene.camera.far / r.dir.z; 
+			if(hit.t < 0)//Only put it on the background, not behind the camera too
+				return black;
 			
 			hit.hitP = r.pointAtParameter(hit.t);
 			hit.normal = new Double3D(0,0,1);
@@ -416,15 +418,16 @@ public class RayTracer implements Runnable
 					
 					//R = I - 2 * (I.N)N
 					Double3D R = new Double3D();
+					Double3D I = ray.dir;//.sMult(-1.0);
 					Double3D N = hit.normal;
-					double IdN = -ray.dir.dot(N);
+					double IdN = I.dot(N);
 					
-					if (IdN < 0){
+					if (IdN > 0){
 						N = N.sMult(-1.0);
-						IdN = -ray.dir.dot(N);
+						IdN = -I.dot(N);
 					}//*/
 					
-					R = ray.dir.plus( N.sMult( -2.0 * IdN) );
+					R = I.plus(N.sMult(-2.0 * I.dot(N)));
 						
 					Ray reflect = new Ray(hit.hitP, R);
 					DoubleColor reflection = trace(reflect);
