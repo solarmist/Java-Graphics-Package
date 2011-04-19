@@ -388,17 +388,17 @@ public class RayTracer implements Runnable
 								//double cosinePhi = reflec.dot()
 								//If the light is free add the diffuse light
 								//Intensity (Kd * (LdN) + Ks *(RdV)^(shiny)/(r + k)
-								/*color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN + lights[i].specular[0] * Math.pow(RdV, material.shiny)),// / d,
+								color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN + lights[i].specular[0] * Math.pow(RdV, material.shiny)),// / d,
 															(double)(lights[i].diffuse[1] * LdN + lights[i].specular[1] * Math.pow(RdV, material.shiny)),// / d,
 															(double)(lights[i].diffuse[2] * LdN + lights[i].specular[2] * Math.pow(RdV, material.shiny)),// / d,
-															1.0) );*/
+															1.0) );//*/
 								
-								color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN) / d,
+								/*color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN) / d,
 										(double)(lights[i].diffuse[1] * LdN ) / d,
 										(double)(lights[i].diffuse[2] * LdN ) / d,
 										1.0) );
 								
-								/*color.plus(new DoubleColor( (double)(lights[i].specular[0] * Math.pow(RdV, material.shiny)),
+								color.plus(new DoubleColor( (double)(lights[i].specular[0] * Math.pow(RdV, material.shiny)),
 										(double)(lights[i].specular[1] * Math.pow(RdV, material.shiny)),
 										(double)(lights[i].specular[2] * Math.pow(RdV, material.shiny)),
 										1.0) );//*/
@@ -410,14 +410,14 @@ public class RayTracer implements Runnable
 			//Shiny Phong
 			//If IdN > 0 then we find a reflection
 			//If IdN < 0 then we need -normal
-			if(DEBUG || scene.reflections && (hit.normal.dot(ray.dir) < 0)
+			if(DEBUG || !scene.reflections && (hit.normal.dot(ray.dir) < 0)
 					&& (material.reflectivity.r > 0 || material.reflectivity.g > 0 || material.reflectivity.b > 0))
 			{
 				hit.depth++;
 				
 				//R = I - 2 * (I.N)N
 				Double3D R = new Double3D();
-				R = ray.dir.plus( hit.normal.sMult( -2* hit.normal.dot(ray.dir)) );
+				R = ray.dir.plus( hit.normal.sMult( -2.0 * hit.normal.dot(ray.dir)) );
 					
 				Ray reflect = new Ray(hit.hitP, R.getUnit(), ray.n);
 				DoubleColor reflection = trace(reflect);
@@ -434,7 +434,7 @@ public class RayTracer implements Runnable
 				hit.depth--;
 			}
 			
-			if(DEBUG || !scene.refractions //&& (hit.normal.dot(ray.data[1]) > 0) &&
+			if(DEBUG || scene.refractions //&& (hit.normal.dot(ray.data[1]) > 0) &&
 					&& (material.refractivity.r > 0 || material.refractivity.g > 0 || material.refractivity.b > 0))
 			{
 				hit.depth++;
@@ -448,9 +448,9 @@ public class RayTracer implements Runnable
 					Ray refract = new Ray(hit.hitP, refractDir.getUnit(), ray.n, ray.nt, ray.inside);
 					DoubleColor refraction = trace(refract);
 					
-					refraction.r = refraction.r * .8;//material.refractivity.r;
-					refraction.g = refraction.g * .8;//material.refractivity.g;
-					refraction.b = refraction.b * .8;//material.refractivity.b;
+					refraction.r = refraction.r * material.refractivity.r;
+					refraction.g = refraction.g * material.refractivity.g;
+					refraction.b = refraction.b * material.refractivity.b;
 					
 					//Scale for distance?
 					color.plus( refraction ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)

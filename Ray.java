@@ -10,6 +10,8 @@ public class Ray{
 	//public Double3D data[];
 	public Double3D origin;
 	public Double3D dir;
+	
+	//We need a stack of these to keep track of from and to when intersecting multiple objects
 	public double n = 1.0;
 	public double nt = 1.0;
 	public boolean inside = false;
@@ -37,7 +39,9 @@ public class Ray{
     	//this.data[1] = b;
     	this.origin = a;
     	this.dir = b;
+    	//Same medium
     	n = _n;
+    	nt = _n;
     }
 	
 	public Ray(Double3D a, Double3D b, double _n, double _nt, boolean _inside){
