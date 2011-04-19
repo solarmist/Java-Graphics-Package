@@ -393,102 +393,96 @@ public class RayTracer implements Runnable
 								//-2(-L.N)N + -L
 								Double3D R = hit.normal.sMult( -2 * hit.normal.dot( L.sMult(-1)) ).plus( L.sMult(-1) );
 								double RdV = Math.max(0, -R.dot(ray.dir) );
-								double d = L.distanceTo(hit.hitP);
+								double d = 2; //L.distanceTo(hit.hitP);
 								
 								//double cosinePhi = reflec.dot()
 								//If the light is free add the diffuse light
 								//Intensity (Kd * (LdN) + Ks *(RdV)^(shiny)/(r + k)
-								color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN + lights[i].specular[0] * Math.pow(RdV, material.shiny)),// / d,
-															(double)(lights[i].diffuse[1] * LdN + lights[i].specular[1] * Math.pow(RdV, material.shiny)),// / d,
-															(double)(lights[i].diffuse[2] * LdN + lights[i].specular[2] * Math.pow(RdV, material.shiny)),// / d,
-															1.0) );//*/
-								
-								/*color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN) / d,
-										(double)(lights[i].diffuse[1] * LdN ) / d,
-										(double)(lights[i].diffuse[2] * LdN ) / d,
-										1.0) );
-								
-								color.plus(new DoubleColor( (double)(lights[i].specular[0] * Math.pow(RdV, material.shiny)),
-										(double)(lights[i].specular[1] * Math.pow(RdV, material.shiny)),
-										(double)(lights[i].specular[2] * Math.pow(RdV, material.shiny)),
-										1.0) );//*/
-							}
-						}
-					}
-				}
+								color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN + lights[i].specular[0] * Math.pow(RdV, material.shiny)) / d,
+															(double)(lights[i].diffuse[1] * LdN + lights[i].specular[1] * Math.pow(RdV, material.shiny)) / d,
+															(double)(lights[i].diffuse[2] * LdN + lights[i].specular[2] * Math.pow(RdV, material.shiny)) / d,
+															1.0) );
+							}//if(LdN > 0)
+						}//if(!scene.shadows || shadowTrace(shadowRay))
+					}//if(lights[i].lightSwitch == 1){
+				}//for
 			
-			//Shiny Phong
-			//If IdN > 0 then we find a reflection
-			//If IdN < 0 then we need -normal
-			if(DEBUG || !scene.reflections && (hit.normal.dot(ray.dir) < 0)
-					&& (material.reflectivity.r > 0 || material.reflectivity.g > 0 || material.reflectivity.b > 0))
-			{
-				hit.depth++;
-				
-				//R = I - 2 * (I.N)N
-				Double3D R = new Double3D();
-				R = ray.dir.plus( hit.normal.sMult( -2.0 * hit.normal.dot(ray.dir)) );
-					
-				Ray reflect = new Ray(hit.hitP, R.getUnit(), ray.n);
-				DoubleColor reflection = trace(reflect);
-				
-				//Scale by distance?
-				//reflection.scale( 1 / reflect.origin().distanceTo(hit.hitP));
-				
-				reflection.r = reflection.r * material.reflectivity.r;
-				reflection.g = reflection.g * material.reflectivity.g;
-				reflection.b = reflection.b * material.reflectivity.b;
-				
-				color.plus( reflection ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
-				
-				hit.depth--;
-			}
-			
-			if(DEBUG || scene.refractions //&& (hit.normal.dot(ray.data[1]) > 0) &&
-					&& (material.refractivity.r > 0 || material.refractivity.g > 0 || material.refractivity.b > 0))
-			{
-				hit.depth++;
-
-				Double3D refractDir = new Double3D(); 
-				if(!ray.inside)
-					ray.nt = material.refractiveIndex;
-				
-				if(transmissionDirection(ray, hit, refractDir))
+				//Shiny Phong
+				//If IdN > 0 then we find a reflection
+				//If IdN < 0 then we need -normal
+				if(!scene.reflections && //hit.t > 0 &&
+						(material.reflectivity.r > 0 ||
+						 material.reflectivity.g > 0 ||
+						 material.reflectivity.b > 0))
 				{
-					Ray refract = new Ray(hit.hitP, refractDir.getUnit(), ray.n, ray.nt, ray.inside);
-					DoubleColor refraction = trace(refract);
+					depth++;
 					
-					refraction.r = refraction.r * material.refractivity.r;
-					refraction.g = refraction.g * material.refractivity.g;
-					refraction.b = refraction.b * material.refractivity.b;
+					//R = I - 2 * (I.N)N
+					Double3D R = new Double3D();
+					Double3D N = hit.normal;
+					double IdN = ray.dir.dot(N);
+					if (IdN < 0)
+						N = N.sMult(-1.0);
+					IdN = ray.dir.dot(N);
+					R = ray.dir.plus( N.sMult( -2.0 * IdN) );
+						
+					Ray reflect = new Ray(hit.hitP, R);
+					DoubleColor reflection = trace(reflect);
 					
-					//Scale for distance?
-					color.plus( refraction ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
+					//Scale by distance?
+					//reflection.scale( 1 / reflect.origin().distanceTo(hit.hitP));
+					
+					reflection.r = reflection.r * material.reflectivity.r;
+					reflection.g = reflection.g * material.reflectivity.g;
+					reflection.b = reflection.b * material.reflectivity.b;
+					
+					color.plus( reflection ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
+					
+					depth--;
 				}
 				
-				hit.depth--;
+				if(scene.refractions && 
+						(material.refractivity.r > 0 || 
+						 material.refractivity.g > 0 || 
+				 		 material.refractivity.b > 0))
+				{
+					depth++;
+	 
+					Ray refract = new Ray(hit.hitP, ray.dir);
+					
+					if(hit.index == ray.r.objectNum) //Hit the object we're already in
+					{
+						//Pop the n off the stack
+						refract.r = ray.r.prevR;
+					}
+					else //Otherwise we hit a new object push this n onto the stack and get mat index
+					{
+						refract.r.prevR = ray.r;
+						refract.r.n = material.refractiveIndex;
+					}
+					
+					if(transmissionDirection(ray, hit, refract))
+					{
+						DoubleColor refraction = trace(refract);
+						
+						refraction.r = refraction.r * material.refractivity.r;
+						refraction.g = refraction.g * material.refractivity.g;
+						refraction.b = refraction.b * material.refractivity.b;
+						
+						//Scale for distance?
+						color.plus( refraction ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
+					}
+					
+					depth--;
+				}
 			}
 			return color;
 		}
 		
-		boolean transmissionDirection(Ray ray, HitRecord hit, Double3D transmission) 
+		boolean transmissionDirection(Ray ray, HitRecord hit, Ray transmission) 
 		{
-			
-			/*// calculate refraction
-			float refr = prim->GetMaterial()->GetRefraction();
-			float nt = prim->GetMaterial()->GetRefrIndex();
-			float nRatio = n / nt;
-			
-			
-			vector3 N = prim->GetNormal( pi ) * (float)result;
-			float cosI = -DOT( N, a_Ray.GetDirection() );
-			float cosT2 = 1.0f - nRatio * nRatio * (1.0f - cosI * cosI);
-			if (cosT2 > 0.0f)
-				vector3 T = (nRatio * a_Ray.GetDirection()) + (nRatio * cosI - sqrtf( cosT2 )) * N;
-				= nRatio *(D + cosI - sqrt(cosT2))*N
-			*/
-			double n = ray.n;
-			double nt = ray.nt;
+			double n = transmission.r.prevR.n;
+			double nt = transmission.r.n;
 			
 			Double3D N = hit.normal.sMult(-1);
 			Double3D D = ray.dir;
