@@ -10,7 +10,7 @@ import javax.media.opengl.glu.*;
 
 public class RayTracer implements Runnable
 {
-	final int THREADS = 16;
+	final int THREADS = 1;
 	DoubleColor viewPort[][];
 	Scene scene;
 	PMesh[] shapes;
@@ -260,7 +260,7 @@ public class RayTracer implements Runnable
 			if(depth > Math.max(DEBUG_recursion, scene.maxRecursiveDepth))
 				return color;
 			
-			double tMin = 0.00001;
+			double tMin = 0.0001;
 			double tMax = 10000000;
 
 			//Spheres only for now
@@ -332,9 +332,6 @@ public class RayTracer implements Runnable
 		
 		boolean shadowTrace(Ray ray)
 		{
-			if(depth > Math.max(DEBUG_recursion, scene.maxRecursiveDepth))
-				return false;
-			
 			for(int i = 0; i < numObjects; i++)
 				//Spheres only for now
 				if(spheres[i].shadowHit(ray, 0.00001, 10000000, 0))
@@ -385,7 +382,7 @@ public class RayTracer implements Runnable
 						//trace shadow ray to light source
 						
 						//Turn shadows on and shadowRay hit nothing
-						if(!scene.shadows || shadowTrace(shadowRay))
+						if(scene.shadows || shadowTrace(shadowRay))
 						{	
 							double LdN = Math.max(0, hit.normal.dot(L));
 							if(LdN > 0)
@@ -401,7 +398,7 @@ public class RayTracer implements Runnable
 								color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN + lights[i].specular[0] * Math.pow(RdV, material.shiny)) / d,
 															(double)(lights[i].diffuse[1] * LdN + lights[i].specular[1] * Math.pow(RdV, material.shiny)) / d,
 															(double)(lights[i].diffuse[2] * LdN + lights[i].specular[2] * Math.pow(RdV, material.shiny)) / d,
-															1.0) );
+															1.0) );//*/
 							}//if(LdN > 0)
 						}//if(!scene.shadows || shadowTrace(shadowRay))
 					}//if(lights[i].lightSwitch == 1){
@@ -410,7 +407,7 @@ public class RayTracer implements Runnable
 				//Shiny Phong
 				//If IdN > 0 then we find a reflection
 				//If IdN < 0 then we need -normal
-				if(!scene.reflections && //hit.t > 0 &&
+				if(!scene.reflections && 
 						(material.reflectivity.r > 0 ||
 						 material.reflectivity.g > 0 ||
 						 material.reflectivity.b > 0))
@@ -420,10 +417,13 @@ public class RayTracer implements Runnable
 					//R = I - 2 * (I.N)N
 					Double3D R = new Double3D();
 					Double3D N = hit.normal;
-					double IdN = ray.dir.dot(N);
-					if (IdN < 0)
+					double IdN = -ray.dir.dot(N);
+					
+					if (IdN < 0){
 						N = N.sMult(-1.0);
-					IdN = ray.dir.dot(N);
+						IdN = -ray.dir.dot(N);
+					}//*/
+					
 					R = ray.dir.plus( N.sMult( -2.0 * IdN) );
 						
 					Ray reflect = new Ray(hit.hitP, R);
@@ -432,11 +432,11 @@ public class RayTracer implements Runnable
 					//Scale by distance?
 					//reflection.scale( 1 / reflect.origin().distanceTo(hit.hitP));
 					
-					reflection.r = reflection.r * material.reflectivity.r;
-					reflection.g = reflection.g * material.reflectivity.g;
-					reflection.b = reflection.b * material.reflectivity.b;
+					reflection.r = reflection.r * 1;//material.reflectivity.r;
+					reflection.g = reflection.g * 1;//material.reflectivity.g;
+					reflection.b = reflection.b * 1;//material.reflectivity.b;
 					
-					color.plus( reflection ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
+					color.plus( reflection );
 					
 					depth--;
 				}
@@ -444,7 +444,7 @@ public class RayTracer implements Runnable
 				if(scene.refractions && 
 						(material.refractivity.r > 0 || 
 						 material.refractivity.g > 0 || 
-				 		 material.refractivity.b > 0))
+				 		 material.refractivity.b > 0))//*/
 				{
 					depth++;
 	 
@@ -453,12 +453,18 @@ public class RayTracer implements Runnable
 					if(hit.index == ray.r.objectNum) //Hit the object we're already in
 					{
 						//Pop the n off the stack
-						refract.r = ray.r.prevR;
+						refract.r = ray.r;
+						
+						//Swap the refraction indices
+						double temp = refract.r.n;
+						refract.r.n = refract.r.prevR.n;
+						refract.r.prevR.n = temp;
 					}
 					else //Otherwise we hit a new object push this n onto the stack and get mat index
 					{
 						refract.r.prevR = ray.r;
 						refract.r.n = material.refractiveIndex;
+						refract.r.objectNum = hit.index;
 					}
 					
 					if(transmissionDirection(ray, hit, refract))
@@ -470,7 +476,7 @@ public class RayTracer implements Runnable
 						refraction.b = refraction.b * material.refractivity.b;
 						
 						//Scale for distance?
-						color.plus( refraction ); //trace(ray from iPoint in direction of reflected/refracted, rDepth + 1)
+						color.plus( refraction ); 
 					}
 					
 					depth--;
@@ -484,11 +490,11 @@ public class RayTracer implements Runnable
 			double n = transmission.r.prevR.n;
 			double nt = transmission.r.n;
 			
-			Double3D N = hit.normal.sMult(-1);
+			Double3D N = hit.normal;
 			Double3D D = ray.dir;
 			
 			double cosine = -D.dot(N);
-			if(n < nt)//We're inside, so reverse the normal
+			if(n > nt)//We're inside, so reverse the normal
 				cosine =  -D.dot(N.sMult(-1));
 			
 		    double nRatio = n / nt;

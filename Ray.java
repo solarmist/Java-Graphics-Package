@@ -12,7 +12,6 @@ public class Ray{
 	public Double3D dir;
 
 	//Stack of rays to get back to original n
-	Ray fromRefract = null;
 	Refract r = null;
 	
 	class Refract

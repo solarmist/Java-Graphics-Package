@@ -65,7 +65,7 @@ public class Sphere implements Shape
 	        //Now check for a valid interval
 	        if(t < tMin)
 	        	t = (- b + discriminant) / (2 * a);
-	        if(t > tMax) //t < tMin || don't need this
+	        if(t < tMin || t > tMax)
 	        	return false;
 	        
 	        //We have a valid hit
