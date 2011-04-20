@@ -207,8 +207,8 @@ public class Double3D implements Serializable
 	} // end distanceTo
 
 	public String toString(){
-		DecimalFormat twodig= new DecimalFormat("#.##");
-		String rtn = new String("("+twodig.format(x)+", "+twodig.format(y)+", "+twodig.format(z)+")");
+		DecimalFormat threedig= new DecimalFormat("#.###");
+		String rtn = new String("("+threedig.format(x)+", "+threedig.format(y)+", "+threedig.format(z)+")");
 		return rtn;
 	} // end toString
 

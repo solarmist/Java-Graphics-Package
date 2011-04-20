@@ -113,7 +113,7 @@ public class RayTracer implements Runnable
 	public class Renderer implements Runnable
 	{
 		//Portion of the viewport to render
-		int startLine;
+		int startLine = 0;
 		int curX = 0, curY = 0;
 		int checkerFreq = 200;
 		int samples;
@@ -125,19 +125,23 @@ public class RayTracer implements Runnable
 	    MaterialCell white = new MaterialCell();
 	    
 	    static final boolean DEBUG = false;
-		static final int DEBUG_recursion = 5;
-		static final int DEBUG_samples = 5;
+		static final int DEBUG_recursion = 0;
+		static final int DEBUG_samples = 16;	//This needs to be a perfect square for Multi-jitter
 		
 		Renderer()
 		{
-			xMin = (int)scene.camera.viewportLeft;
-			xMax = (int)scene.camera.viewportRight; 
-			yMin = (int)scene.camera.viewportBottom; 
-			yMax = (int)scene.camera.viewportTop;
+			xMin = scene.camera.viewportLeft + 0.5;
+			xMax = scene.camera.viewportRight;
+			yMin = scene.camera.viewportBottom + 0.5;
+			yMax = scene.camera.viewportTop;
 			
 			if(scene.antiAliasing)
 			{
 				samples = Math.max(scene.raysPerPixel, DEBUG_samples);
+				//Force it to be a perfect square
+				samples = (int) Math.sqrt(samples);
+				samples = samples * samples;
+				
 				imageSamples = new Double3D[samples];
 				for (int i = 0; i < samples; i++)
 					imageSamples[i] = new Double3D(0,0,0);
@@ -150,8 +154,8 @@ public class RayTracer implements Runnable
 				//Scale image samples to [-1,1]
 			    for (int i = 0; i < samples; i++)
 			    {
-			        imageSamples[i].x = (imageSamples[i].x + 1.0) / 2.0;
-			        imageSamples[i].y = (imageSamples[i].y + 1.0) / 2.0;
+			        imageSamples[i].x = widthRatio  * imageSamples[i].x / 2.0;
+			        imageSamples[i].y = heightRatio * imageSamples[i].y / 2.0;
 			    }
 			}
 		}
@@ -160,26 +164,31 @@ public class RayTracer implements Runnable
 		{
 			startLine = line;
 			
-			if(scene.antiAliasing)
+			if(!scene.antiAliasing)
 			{
 				sampled = false;
 				
 				samples = Math.max(scene.raysPerPixel, DEBUG_samples);
+				//Force it to be a perfect square
+				samples = (int) Math.sqrt(samples);
+				samples = samples * samples;
+				
 				imageSamples = new Double3D[samples];
 				for (int i = 0; i < samples; i++)
 					imageSamples[i] = new Double3D(0,0,0);
 				
-				Sample.nrooks(imageSamples, samples);
-			    
-			    //Samples are in the range [-2,2]
-				//Sample.cubicSplineFilter(imageSamples, samples);
-								
-				//Scale image samples to [-1,1] and adjust to worldCoords
+				//Make samples are in the range [0,1]
+				Sample.multiJitter(imageSamples, samples);
+			    //Make samples are in the range [-2,2]
+				Sample.cubicSplineFilter(imageSamples, samples);
+				//Scale image samples to [-.5,.5] and adjust to worldCoords this should be +-.5 pixels since we're in the middle of a pixel to begin with
 			    for (int i = 0; i < samples; i++)
 			    {
-			        imageSamples[i].x = widthRatio  * ((imageSamples[i].x + 1.0) / 2.0);
-			        imageSamples[i].y = heightRatio * ((imageSamples[i].y + 1.0) / 2.0);
+			        imageSamples[i].x = widthRatio  * (imageSamples[i].x / 10.0);
+			        imageSamples[i].y = heightRatio * (imageSamples[i].y / 10.0);
+			        //System.out.println("Jitter by: " + imageSamples[i] + " Pixel width: " + widthRatio + " Pixel height: " + heightRatio );
 			    }
+			    
 			}
 		}
 		
@@ -217,10 +226,13 @@ public class RayTracer implements Runnable
 				{
 					worldX += widthRatio;
 					Double3D dir = new Double3D(worldX, worldY, -scene.camera.near);
-					dir.unitize();
-					Ray ray = new Ray(origin, dir);
+					Ray ray = new Ray(origin, dir.getUnit());
 		
-					viewPort[curX][curY] = trace(ray);	//Start at 0 recursive depth
+					viewPort[curX][curY] = trace(ray);
+					
+					//We haven't sampled this pixel yet.
+					if(!scene.antiAliasing)
+						sampled = false;
 				}//for y
 			}//for x
 			
@@ -305,28 +317,33 @@ public class RayTracer implements Runnable
 			{
 				if(!sampled && depth == 0)
 				{
-					//Only sample once
+					//Only sample once per ray from the main loop
 					sampled = true;
 					
 					Double3D dir = ray.dir;
-					DoubleColor antiAlias = new DoubleColor(0,0,0,1);
+					DoubleColor antiAlias = trace(ray);
 					
 					for(int i = 0; i < samples; i++)
-					{
+					{	
+						//Double3D sample = new Double3D(dir.x + imageSamples[i].x, dir.y + imageSamples[i].y, dir.z).getUnit();
+						//ray.dir = sample;
 						ray.dir.x = dir.x + imageSamples[i].x;
 						ray.dir.y = dir.y + imageSamples[i].y;
-
-						antiAlias.plus( trace(ray));
+						
+						antiAlias.plus(trace(ray));
 					}
-					antiAlias.scale(1 / samples);
+					antiAlias.scale(1.0 / (samples + 1.0));
 					
 					color.plus(antiAlias);
 				}
 				else
-					color = shade(ray, hit, shapes[hit.index].materials[hit.matIndex], false);
+					if(hit.matIndex < shapes[hit.index].materials.length)
+						color = shade(ray, hit, shapes[hit.index].materials[hit.matIndex], false);
+					else
+						color = shade(ray, hit, shapes[hit.index].materials[shapes[hit.index].materials.length - 1], false);
 			}
 			else//We hit nothing check for intersection with the far clip plane for checker board pattern.
-				if(!scene.checkerBackground)
+				if(scene.checkerBackground)
 					color = shade(ray, hit, checkerBackgroundHit(ray, hit), true);
 				
 			return color;
@@ -374,6 +391,8 @@ public class RayTracer implements Runnable
 			//Local light or directional? If directional then we need to see if it's shining on the object
 			if(!background)
 			{
+				double d = 2; //L.distanceTo(hit.hitP);
+				
 				for(int i = 0; i < lights.length ; i++){
 					if(lights[i].lightSwitch == 1){
 						Double3D L = new Double3D(	(double)lights[i].position[0], 
@@ -384,7 +403,7 @@ public class RayTracer implements Runnable
 						//trace shadow ray to light source
 						
 						//Turn shadows on and shadowRay hit nothing
-						if(scene.shadows || shadowTrace(shadowRay))
+						if(!scene.shadows || shadowTrace(shadowRay))
 						{	
 							double LdN = Math.max(0, hit.normal.dot(L));
 							if(LdN > 0)
@@ -392,9 +411,7 @@ public class RayTracer implements Runnable
 								//-2(-L.N)N + -L
 								Double3D R = hit.normal.sMult( -2 * hit.normal.dot( L.sMult(-1)) ).plus( L.sMult(-1) );
 								double RdV = Math.max(0, -R.dot(ray.dir) );
-								double d = 2; //L.distanceTo(hit.hitP);
 								
-								//double cosinePhi = reflec.dot()
 								//If the light is free add the diffuse light
 								//Intensity (Kd * (LdN) + Ks *(RdV)^(shiny)/(r + k)
 								color.plus(new DoubleColor( (double)(lights[i].diffuse[0] * LdN + lights[i].specular[0] * Math.pow(RdV, material.shiny)) / d,
@@ -409,7 +426,7 @@ public class RayTracer implements Runnable
 				//Shiny Phong
 				//If IdN > 0 then we find a reflection
 				//If IdN < 0 then we need -normal
-				if(!scene.reflections && 
+				if(scene.reflections && 
 						(material.reflectivity.r > 0 ||
 						 material.reflectivity.g > 0 ||
 						 material.reflectivity.b > 0))
@@ -435,9 +452,9 @@ public class RayTracer implements Runnable
 					//Scale by distance?
 					//reflection.scale( 1 / reflect.origin().distanceTo(hit.hitP));
 					
-					reflection.r = reflection.r * 1;//material.reflectivity.r;
-					reflection.g = reflection.g * 1;//material.reflectivity.g;
-					reflection.b = reflection.b * 1;//material.reflectivity.b;
+					reflection.r = reflection.r * material.reflectivity.r;
+					reflection.g = reflection.g * material.reflectivity.g;
+					reflection.b = reflection.b * material.reflectivity.b;
 					
 					color.plus( reflection );
 					

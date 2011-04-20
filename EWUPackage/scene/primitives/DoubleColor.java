@@ -86,8 +86,8 @@ public class DoubleColor implements Serializable
 	}
 	
 	public String toString(){
-		DecimalFormat twodig= new DecimalFormat("#.##");
-		String rtn = new String(twodig.format(r)+"  "+twodig.format(g)+"  "+twodig.format(b));
+		DecimalFormat threedig= new DecimalFormat("#.###");
+		String rtn = new String(threedig.format(r)+"  "+threedig.format(g)+"  "+threedig.format(b));
 		return rtn;
 	} // end toString
 }
