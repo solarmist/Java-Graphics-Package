@@ -87,7 +87,10 @@ public class Triangle implements Shape
 	        record.t = tval;
 	        record.hitP = r.pointAtParameter(tval);
 	        //Normals are pre-calculated
-	        //record.normal = unitVector(cross((p1 - p0), (p2-p0)));
+	        Double3D v1 = p1.minus(p0);
+	        Double3D v2 = p2.minus(p0);
+	        
+	        record.normal = v1.cross(v2).getUnit();
 	        
 	        return true;
 	    }
@@ -183,8 +186,7 @@ public class Triangle implements Shape
 	    if(tval >= tMin && tval <= tMax){
 	        record.t = tval;
 	        record.hitP = r.pointAtParameter(tval);
-	        record.normal = p1.minus(p0).cross(p2.minus(p0)).getUnit();
-	        //record.color = color;
+	        //record.normal = p1.minus(p0).cross(p2.minus(p0)).getUnit();
 	        
 	        return true;
 	    }

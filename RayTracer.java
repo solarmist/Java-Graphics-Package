@@ -29,7 +29,7 @@ public class RayTracer implements Runnable
 	RayTracer()
 	{}
 	
-	RayTracer(Scene theScene, GL2 _gl, GLU _glu)//Threaded?
+	RayTracer(Scene theScene, GL2 _gl, GLU _glu)
 	{
 		System.out.println("Init RayTracer");
 		gl = _gl;
@@ -67,6 +67,14 @@ public class RayTracer implements Runnable
 				{
 					Double3D v[] = new Double3D[3];
 					int j = 0;
+					
+					try{
+						poly.viewNorm = poly.normal.preMultiplyMatrix(MatrixOps.inverseTranspose(MatrixOps.multMat(scene.camera.viewMat, shapes[objNum].modelMat)));
+					}
+					catch(Exception e){
+						System.out.println("Matrix cannot be inverted");
+					}
+					
 					for(PMesh.VertListCell vert = poly.vert; vert != null; vert = vert.next)
 					{
 						//v[j] = shapes[objNum].vertArray.get(vert.vert).viewPos;
@@ -184,8 +192,8 @@ public class RayTracer implements Runnable
 				//Scale image samples to [-.5,.5] and adjust to worldCoords this should be +-.5 pixels since we're in the middle of a pixel to begin with
 			    for (int i = 0; i < samples; i++)
 			    {
-			        imageSamples[i].x = widthRatio  * (imageSamples[i].x / 10.0);
-			        imageSamples[i].y = heightRatio * (imageSamples[i].y / 10.0);
+			        imageSamples[i].x = widthRatio / 2  * (imageSamples[i].x / 4.0);
+			        imageSamples[i].y = heightRatio / 2 * (imageSamples[i].y / 4.0);
 			        //System.out.println("Jitter by: " + imageSamples[i] + " Pixel width: " + widthRatio + " Pixel height: " + heightRatio );
 			    }
 			    
@@ -298,7 +306,10 @@ public class RayTracer implements Runnable
 									if(Triangle.hit(v[0],v[1],v[2],ray, tMin, tMax, 0, hit))
 									{ 
 										tMax = hit.t;
-										hit.normal = poly.normal;
+										
+										System.out.println("Polygon normal" + poly.viewNorm);
+										System.out.println("Calculated normal" + hit.normal);
+										hit.normal = poly.viewNorm;
 										hit.matIndex = s.material;
 										hit.index = i;
 									}
@@ -439,10 +450,10 @@ public class RayTracer implements Runnable
 					Double3D N = hit.normal;
 					double IdN = I.dot(N);
 					
-					if (IdN > 0){
-						N = N.sMult(-1.0);
-						IdN = -I.dot(N);
-					}//*/
+					//if (IdN > 0){
+					//	N = N.sMult(-1.0);
+					//	IdN = -I.dot(N);
+					//}//*/
 					
 					R = I.plus(N.sMult(-2.0 * I.dot(N)));
 						
@@ -514,8 +525,10 @@ public class RayTracer implements Runnable
 			Double3D D = ray.dir;
 			
 			double cosine = -D.dot(N);
-			if(n > nt)//We're inside, so reverse the normal
-				cosine =  -D.dot(N.sMult(-1));
+			if(n > nt){//We're inside, so reverse the normal
+				N = N.sMult(-1);
+				cosine =  -D.dot(N);
+			}
 			
 		    double nRatio = n / nt;
 

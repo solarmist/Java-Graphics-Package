@@ -149,6 +149,7 @@ public abstract class PMesh implements Serializable
 	 */
 	public class PolyCell implements Serializable
 	{
+<<<<<<< HEAD
 		private static final long serialVersionUID = 1L;
 <<<<<<< HEAD
 <<<<<<< HEAD:EWUPackage/scene/PMesh.java
@@ -163,6 +164,12 @@ public abstract class PMesh implements Serializable
 		public VertListCell vert;		// pointer to the first vertex
 >>>>>>> Packaged everything.
 		Double3D normal;		// polygon normal
+=======
+		int numVerts;			// total number of verticies in the polygon
+		VertListCell vert;		// pointer to the first vertex
+		Double3D normal;		// poly normal
+		Double3D normalCam;		// poly normal in camera coords
+>>>>>>> Corrected polygon normals for reflection and refraction.
 		Double3D viewNorm;		// viewpoint transformed normal
 		boolean culled;			// culling flag
 		public SurfCell parentSurf;	// pointer to the original surface cell for this polygon
