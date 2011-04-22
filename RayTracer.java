@@ -307,8 +307,6 @@ public class RayTracer implements Runnable
 									{ 
 										tMax = hit.t;
 										
-										System.out.println("Polygon normal" + poly.viewNorm);
-										System.out.println("Calculated normal" + hit.normal);
 										hit.normal = poly.viewNorm;
 										hit.matIndex = s.material;
 										hit.index = i;

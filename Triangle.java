@@ -87,10 +87,10 @@ public class Triangle implements Shape
 	        record.t = tval;
 	        record.hitP = r.pointAtParameter(tval);
 	        //Normals are pre-calculated
-	        Double3D v1 = p1.minus(p0);
-	        Double3D v2 = p2.minus(p0);
+	        //Double3D v1 = p1.minus(p0);
+	        //Double3D v2 = p2.minus(p0);
 	        
-	        record.normal = v1.cross(v2).getUnit();
+	        //record.normal = v1.cross(v2).getUnit();
 	        
 	        return true;
 	    }
