@@ -10,7 +10,7 @@ public class ObjectTypes
 {
     public static final int TYPE_OBJ = 1;
     public static final int TYPE_3DS = 2;
-    public static final int TYPE_dae = 3;
+    public static final int TYPE_DAE = 3;
     public static final int TYPE_VAOBJ = 4;
 
 } // end class ObjectTypes

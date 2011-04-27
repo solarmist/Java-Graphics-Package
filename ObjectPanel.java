@@ -17,6 +17,10 @@ public class ObjectPanel extends JPanel
 ///////////////////////////////////////////////////////////////////////////////
 // DATA MEMBERS
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	public Scene theScene; // ref to the rendering object
 	public JPanel scenePanel, selectionPanel, transformsPanel;
 	public ObjSpecsDialog objSpecsDialog;
@@ -58,6 +62,7 @@ public class ObjectPanel extends JPanel
 		filter = new FileExtensionFilter();
 		filter.addExtension("obj");
 		filter.addExtension("3ds");
+		filter.addExtension("dae");
 		filter.setDescription("Supported Objects");
 		objChooser.setFileFilter(filter);
 		objChooser.setMultiSelectionEnabled(true);
@@ -119,6 +124,8 @@ public class ObjectPanel extends JPanel
 							fileType = ObjectTypes.TYPE_OBJ;
 						if(filter.getExtension(fileList[i]).equalsIgnoreCase("3ds"))
 							fileType = ObjectTypes.TYPE_3DS;
+						if(filter.getExtension(fileList[i]).equalsIgnoreCase("dae"))
+							fileType = ObjectTypes.TYPE_DAE;
 						theScene.addObject(fileList[i].getPath(), fileType);
 						objectList.addItem(theScene.curObject.objName);
 						objectList.setSelectedIndex(objectList.getItemCount()-1);

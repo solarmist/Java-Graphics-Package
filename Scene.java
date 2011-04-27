@@ -473,6 +473,10 @@ public class Scene implements GLEventListener
 				newObj = new ThreeDSLoader(this);
 				newObj.objNumber = ++numLoaded;
 				break;
+			case ObjectTypes.TYPE_DAE:
+				newObj = new ColladaLoader(this);
+				newObj.objNumber = ++numLoaded;
+				break;
 			default:
 				System.out.println("Scene.addObject : undefined object type " +
 								   fileType);

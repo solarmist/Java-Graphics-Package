@@ -1,9 +1,15 @@
 
 import java.io.FileNotFoundException;
+
+//import PMesh.VertCell;
 import collada.*;
 import java.util.*;
 
+import com.jogamp.common.nio.Buffers;
+
 public class ColladaLoader extends PMesh{
+
+	private static final long serialVersionUID = 1L;
 
 	public ColladaLoader(Scene aScene)
 	{
@@ -17,63 +23,67 @@ public class ColladaLoader extends PMesh{
 		objName = Utils.fileFromPath(filepath); // The objName is strictly the filename to begin with
 		active = true;	//We've just created an object...so make it active!
 		next = null;	//Next object in the linked list is null
-
+		
 		Collada collada = new Collada(filepath);
 		
+		//Loads the materials into the PMesh
 		loadEffects(collada.effects);
-		loadModel(collada);
-		
+		try
+		{
+			loadModel(collada);
+		}
+		catch(Exception e)
+		{
+			System.out.println(e.toString());
+			return false;
+		}
+			
 		//This simply loads the modelMat with an identity matrix.
 		modelMat = MatrixOps.newIdentity();
 		return true;
 	}
 	
 	
-	//loads the first model only from the collada file
-	public void loadModel(Collada collada)
+	//loads the first model only from the Collada file
+	/* Date: 04/26/2011
+	 * Author: Joshua Olson
+	 * Changes: Loaded normals into PMesh object. Fixed loading input checking to determine vertex position source
+	 * 	Throws exception upon model not having any normals
+	 */
+	public void loadModel(Collada collada) throws Exception
 	{
-		
 		String sceneUrl = collada.scene.instance_visual_scene.url.substring(1);  //starting point into the collada file
 		
 		Nodec node = null;		//the first node in the scene
 		boolean flag = true;
 		String igurl;			//the starting url 
-		Mesh mesh=null;			//the mesh structor to be loaded
-		Triangles tempTri;		//each Triangles is a surfCell
-		Vertices tempVerties=null;  //the vertices for the mesh
+		Mesh mesh=null;			//the mesh structure to be loaded
+		Triangles curTri = null;		//each Triangles is a surfCell
+		//Vertices tempVerties=null;  //the vertices for the mesh
 		
-		//next 5 objects are used to help load from the collada data to the PMesh data
-		VertCell tempVertCell;		
-		PolyCell tempPolyCell;
-		SurfCell tempSurfCell;
-		VertListCell tempVertListCell;
-		PolyListCell tempPolyListCell;
-		
-		
-		int offset=0;	//the offset of each vertex
-		int cur = 0;	//the curent polycell being loaded
-		
-		ArrayList normals = new ArrayList();  //holds the normals until they are loaded into PMesh
+		//ArrayList<Double3D> normals = new ArrayList<Double3D>();  //holds the normals until they are loaded into PMesh
 		Instance_Geometry instanceGeom;		  //holds the geometry data
 		
-		//used for keeping track of the offsets offsets
-		Input vertexO=null,
-		normalO=null,
-		textCoordO=null,
-		textTangO=null,
-		textBinO=null;
-		
 		Library_Visual_Scenes lbs = collada.vscenes;  
-		Library_Geometries lg = collada.gemetries;
-		
-		
+		Library_Geometries lg = collada.geometries;
+			
 		//start at the starting point and find the node we want to draw
-		for(int x =0; x< lbs.scenes.size() && flag;x++)
+		for(int x = 0; x< lbs.scenes.size() && flag;x++)
 		{
-			if(((Visual_Scene)lbs.scenes.get(x)).id.matches(sceneUrl))
+			Visual_Scene scene_x = (Visual_Scene) lbs.scenes.get(x);
+			if( ( scene_x ).id.matches(sceneUrl) )
 			{
-				node = (Nodec)((Visual_Scene)lbs.scenes.get(x)).nodes.get(0);
-				flag = false;
+				
+				for(int y = 0; y < scene_x.nodes.size();y++)
+				{
+					Nodec node_y =(Nodec) scene_x.nodes.get(y);
+					//Make sure we have instance geometry in this node
+					if(node_y.instance_geometry.size() != 0)
+					{
+						node = node_y;
+						flag = false;
+					}
+				}
 			}
 		}
 		
@@ -89,7 +99,7 @@ public class ColladaLoader extends PMesh{
 		flag = true;
 				
 		//get the mesh data from the node that we are drawing
-		for(int x =0; x < lg.geometry.size() && flag;x++ )
+		for(int x = 0; x < lg.geometry.size() && flag;x++ )
 		{
 			if(((Geometry)lg.geometry.get(x)).id.matches(igurl))
 			{
@@ -111,237 +121,325 @@ public class ColladaLoader extends PMesh{
 		}
 		
 		//start loading pmesh information from the mesh object
-			
+		System.out.println("Ready to load");	
 		
-		tempVerties = mesh.vertices;
+		ArrayList<Input> temp_input = (ArrayList<Input>) ( (Triangles)mesh.triangles.get(0) ).inputs;
 		
-		int location =0;
+		//find where the vertices are stored and load the data
+		int pos_location = 0;
+		String vertex_source = "";
+		String normal_source = "";
 		
-		//find where the verties are stored and load the data
-		while(!((Input)tempVerties.input.get(location)).semantic.matches("POSITION"))
+		//Check the inputs for normals and vertices the vertices must have a "POSITION" specifier
+		for(int input_num = 0; input_num < temp_input.size(); input_num++)
 		{
-			location++;
+			Input input_x = (Input)temp_input.get(input_num);
+			//Must be upper-case
+			//This is guaranteed to exist by Collada 1.5 spec
+			if(input_x.semantic.matches("VERTEX"))
+			{
+				//Remove the leading '#'
+				vertex_source = input_x.source.substring(1);
+				pos_location = input_num;
+			}
+			//WARNING! Normals are not guaranteed by the Collada 1.5 spec
+			if(input_x.semantic.matches("NORMAL"))
+				//Remove the leading '#'
+				normal_source = input_x.source.substring(1);
 		}
 		
-		String reference = ((Input)tempVerties.input.get(location)).source;
+		//Check the vertices' inputs for "POSITION"
+		//This is guaranteed to exist by Collada 1.5 spec 
+		String position_source = "";
+		temp_input = mesh.vertices.input;
+		for(int x = 0; 	
+				x < temp_input.size() && 
+					!( (Input)temp_input.get(x) ).semantic.matches(vertex_source);
+				x++)
+			//Remove the leading '#'
+			position_source = ( (Input)temp_input.get(x) ).source.substring(1);
 		
-		location =  0;
-		while(!((Source)mesh.sources.get(location)).id.matches(reference.substring(1)))
-		{
-			location++;
-		}
+		//Get the "POSITION" source
+		//This is guaranteed to exist by Collada 1.5 spec
+		Source source_pos = null;
+		for(	pos_location = 0; 
+				pos_location < mesh.sources.size() &&
+					!(source_pos = (Source)mesh.sources.get(pos_location) ).id.matches(position_source); 
+				pos_location++)
+			;//source_pos is assigned in the header of the for loop
 		
+		Source source_norm = null;
+		if(!normal_source.isEmpty())
+			for(	pos_location = 0; 
+			pos_location < mesh.sources.size() &&
+				!(source_norm = (Source)mesh.sources.get(pos_location) ).id.matches(normal_source); 
+			pos_location++)
+			;//source_norm is assigned in the header of the for loop, if it exists
 		
-		Float_Array fArray = ((Source)mesh.sources.get(location)).floatArray;
-		int vCount = ((Source)mesh.sources.get(location)).accessor.count;
-		int vStride = ((Source)mesh.sources.get(location)).accessor.stride;
+		VertCell tempVertCell;		
+		PolyCell curPolyC;
 		
-		vertArray = new ArrayList<VertCell>();
-		numVerts = vCount;
+		Float_Array fVertArray = source_pos.floatArray;
+		int vVertCount = source_pos.accessor.count;
+		int vVertStride = source_pos.accessor.stride;
+		
+		if(source_norm == null)
+			throw new Exception("NORMALS DO NOT EXIST!! FIX CODE TO HANDLE THIS CASE");
+		
+		Float_Array fNormArray = source_norm.floatArray;
+		int vNormCount = source_norm.accessor.count;
+		int vNormStride = source_norm.accessor.stride;
 		int place =0;
 		
-		for(int x =0; x < vCount; x++)
+		vertArray = new ArrayList<VertCell>();
+		numVerts = vVertCount;
+		for(int x = 0; x < vVertCount; x++)
 		{
 			tempVertCell = new VertCell();
 			
-			tempVertCell.worldPos.x = fArray.getValue(place);
-			tempVertCell.worldPos.y = fArray.getValue(place+1);
-			tempVertCell.worldPos.z = fArray.getValue(place+2);
+			tempVertCell.worldPos.x = fVertArray.getValue(place);
+			tempVertCell.worldPos.y = fVertArray.getValue(place + 1);
+			tempVertCell.worldPos.z = fVertArray.getValue(place + 2);
 			
 			tempVertCell.polys = null;
 			vertArray.add(x, tempVertCell);
 			
-			place += vStride;
-			
+			place += vNormStride;
 		}
 		
+		//Load the normals here!
+		vertNormArray = new Double3D[vNormCount];
+		numNorms = vNormCount;
+		place = 0;
+		for(int x =0; x < vNormCount; x++)
+		{	
+			vertNormArray[x] = new Double3D();
+			vertNormArray[x].x = fNormArray.getValue(place);
+			vertNormArray[x].y = fNormArray.getValue(place + 1);
+			vertNormArray[x].z = fNormArray.getValue(place + 2);
+			
+			place += vVertStride;
+		}
 		
 		//all of the VertCells are loaded 
-		
+		//and normals if they exist
 		
 		numSurf = mesh.triangles.size();
 		
-		tempSurfCell = new SurfCell("tempCollada");
-		surfHead = tempSurfCell;
+		//next 5 objects are used to help load from the collada data to the PMesh data
 		
-		for(int x=0; x < numSurf; x++)
+		SurfCell curSurf = null;
+		VertListCell curVertLC = null;
+		PolyListCell curPolyLC = null;
+		curPolyC = null;
+		
+		//used for keeping track of the offsets offsets
+		Input vertexO = null,
+		normalO = null,
+		textCoordO = null,
+		textTangO = null,
+		textBinO = null;
+		
+		int offset=0;	//the offset of each vertex
+		int cur = 0;	//the current PolyCell being loaded
+		int vertCount = 0;
+		
+		for(int x = 0; x < numSurf; x++)
 		{
+			//We're only loading a single triangle object right now
+			//curPolyC.next = null;
+			if(x == 0)
+			{
+				curSurf = new SurfCell("tempCollada");
+				surfHead = curSurf;
+			}
+			else
+			{
+				curSurf.next = new SurfCell("tempCollada" + x);
+				curSurf = curSurf.next;		
+			}
 			
-			tempTri = (Triangles)mesh.triangles.get(x);
-			tempSurfCell.numPoly = tempTri.count;
-			tempSurfCell.material = getMaterial(tempTri.material,instanceGeom,collada.material);
+			curTri = (Triangles)mesh.triangles.get(x);
+			curSurf.numPoly = curTri.count;
+			curSurf.material = getMaterial(curTri.material,instanceGeom,collada.material, collada.effects);
+			vertCount = 0;
 			
-			tempPolyCell = new PolyCell();
-			tempPolyCell.numVerts = tempTri.count;
-			tempPolyCell.parentSurf = tempSurfCell;
-			tempSurfCell.polyHead = tempPolyCell;
-			
-			cur = 0;
-			for( int z =0 ;z< tempTri.count;z++)
+			//Check the triangle inputs for this triangle object/Surface and determine the offset for the next semantic items
+			offset = -1;
+			for(int input_num = 0; input_num < curTri.inputs.size(); input_num++)
 			{
 				
-				for(int w=0;w<tempTri.inputs.size();w++)
+				Input temp = (Input)curTri.inputs.get(input_num);
+				if(temp.offset > offset)
 				{
-					
-					offset = 0;
-					
-					if(((Input)tempTri.inputs.get(w)).semantic.matches("VERTEX"))
-					{
-						vertexO = (Input)tempTri.inputs.get(w);
-						if(vertexO.offset > offset)
-							offset = vertexO.offset;
-					}	
-					else if(((Input)tempTri.inputs.get(w)).semantic.matches("NORMAL"))
-					{
-						normalO = (Input)tempTri.inputs.get(w);
-						if(normalO.offset > offset)
-							offset = normalO.offset;
-					}
-					else if(((Input)tempTri.inputs.get(w)).semantic.matches("TEXCOORD"))
-					{
-						textCoordO = (Input)tempTri.inputs.get(w);
-						if(textCoordO.offset > offset)
-							offset = textCoordO.offset;
-					}
-					else if(((Input)tempTri.inputs.get(w)).semantic.matches("TEXTANGENT"))
-					{
-						textTangO = (Input)tempTri.inputs.get(w);
-						if(textTangO.offset > offset)
-							offset = textTangO.offset;
-					}
-					
-					else if(((Input)tempTri.inputs.get(w)).semantic.matches("TEXBINORMAL"))
-					{
-						textBinO = (Input)tempTri.inputs.get(w);
-						if(textBinO.offset > offset)
-							offset = textBinO.offset;
-					}
+					offset = temp.offset;
+					if(temp.semantic.matches("VERTEX"))
+						vertexO = temp;
+					else if(temp.semantic.matches("NORMAL"))
+						normalO = temp;
+					else if(temp.semantic.matches("TEXCOORD"))
+						textCoordO = temp;
+					else if(temp.semantic.matches("TEXTANGENT"))
+						textTangO = temp;
+					else if(temp.semantic.matches("TEXBINORMAL"))
+						textBinO= temp;
 				}
-				
-				tempPolyCell.numVerts = 3;
-								
-				int[] vertexLocations = breakInputs(vertexO,tempTri.getLocations(),offset,tempTri.count);
-				//int[] normalLocations = breakInputs(normalO,tempTri.getLocations(),offset,tempTri.count);
-				
-				//Double3D[] norms = this.getValues(normalLocations,normalO.source.substring(1),mesh.sources);		
-				
-				tempVertCell = new VertCell();
-				
-				
-				tempVertListCell = new VertListCell();
-				//tempSurfCell.polyHead = tempPolyCell;
-				tempPolyCell.vert = tempVertListCell;
-								
-				
-				
-				for(int t = 0 ;t< tempPolyCell.numVerts; t++)
-				{
-					tempVertListCell.vert = vertexLocations[cur];
-					//normals.add(norms[cur]);
-					//tempVertListCell.norm = normals.size()-1;
-					cur++;
-					
-					tempPolyListCell = new PolyListCell();
-					tempPolyListCell.poly = tempPolyCell;
-					
-					addToVertArrayPoly(tempVertListCell.vert,tempPolyListCell);
-					
-					if((t+1) < tempPolyCell.numVerts)
-					{
-						tempVertListCell.next = new VertListCell();
-						tempVertListCell = tempVertListCell.next;
-					}
-				}
-				
-				tempVertListCell.next = null;
-								
-				//int[] textCoordLocations = breakInputs(textCoordO,tempTri.getLocations(),offset,tempTri.count);
-				//int[] textTangLocations = breakInputs(textTangO,tempTri.getLocations(),offset,tempTri.count);
-				//int[] textBinLocations = breakInputs(textBinO,tempTri.getLocations(),offset,tempTri.count);
-				
-				if((z+1)< tempTri.count)
-				{
-					tempPolyCell.next = new PolyCell();
-					tempPolyCell = tempPolyCell.next;
-					tempPolyCell.parentSurf = tempSurfCell;
-				}
-				
-			}//for # triangles count
+			}
+
+			int[] vertexLocations = breakInputs(vertexO,curTri.getLocations(),offset,curTri.count);
+			int[] normalLocations = breakInputs(normalO,curTri.getLocations(),offset,curTri.count);
+			//int[] textCoordLocations = breakInputs(textCoordO,curTri.getLocations(),offset,curTri.count);
+			//int[] textTangLocations = breakInputs(textTangO,curTri.getLocations(),offset,curTri.count);
+			//int[] textBinLocations = breakInputs(textBinO,curTri.getLocations(),offset,curTri.count);
 			
-			tempPolyCell.next = null;
+			cur = 0;
+			//Build the surface
+			for(int tri_num = 0 ; tri_num < curTri.count; tri_num++)
+			{	
+				//Set the SurfCell's polyHead to this first PolyCell
+				if(tri_num == 0)
+				{
+					curPolyC = new PolyCell();
+					surfHead.polyHead = curPolyC;
+				}
+				else
+				{
+					curPolyC.next = new PolyCell();
+					curPolyC = curPolyC.next;
+				}
+				
+				curPolyC.next = null;
+				curPolyC.numVerts = 3;
+				curPolyC.parentSurf = curSurf;
+				vertCount += 3;
+				
+				
+				//Triangles have three vertices
+				curVertLC = new VertListCell();
+				curVertLC.vert = vertexLocations[cur];
+				curVertLC.norm = normalLocations[cur];
+				cur++;
+				
+				//Make a new PolyCellList in the vertArray based on the index (tempVertListCell.vert)
+				curPolyLC = new PolyListCell();
+				curPolyLC.poly = curPolyC;
+				addToVertArrayPoly(curVertLC.vert, curPolyLC);
+				
+				//Assign the first vertex to the PolyCell
+				curPolyC.vert = curVertLC;
+				
+				curVertLC.next = new VertListCell();
+				curVertLC = curVertLC.next;
+				curVertLC.vert = vertexLocations[cur];
+				curVertLC.norm = normalLocations[cur];
+				cur++;
+				
+				//Make a new PolyCellList in the vertArray based on the index (tempVertListCell.vert)
+				curPolyLC = new PolyListCell();
+				curPolyLC.poly = curPolyC;
+				addToVertArrayPoly(curVertLC.vert, curPolyLC);
+				
+				curVertLC.next = new VertListCell();
+				curVertLC = curVertLC.next;
+				curVertLC.vert = vertexLocations[cur];
+				curVertLC.norm = normalLocations[cur];
+				cur++;
+				
+				//Vertex three has no next
+				curVertLC.next = null;
+				
+				//Make a new PolyCellList in the vertArray based on the index (tempVertListCell.vert)
+				curPolyLC = new PolyListCell();
+				curPolyLC.poly = curPolyC;
+				addToVertArrayPoly(curVertLC.vert, curPolyLC);
+			}//for # triangle count
 			
-			tempSurfCell.next = new SurfCell("tempCollada2");
-			tempSurfCell = tempSurfCell.next;
-						
+			curSurf.numVerts = vertCount;
+			float vertices [] = new float[vertCount*3];
+			int vInd = 0;
+			float normals [] = new float[vertCount*3];
+			int nInd = 0;
+			curPolyC=curSurf.polyHead;
+			while(curPolyC != null){
+				curVertLC = curPolyC.vert;
+				while(curVertLC != null){
+				//for(int i = 0; i < curPoly.numVerts; i++);{
+					VertCell curVert = vertArray.get(curVertLC.vert);
+					vertices[vInd++] = (float)curVert.worldPos.x;
+					vertices[vInd++] = (float)curVert.worldPos.y;
+					vertices[vInd++] = (float)curVert.worldPos.z;
+					normals[nInd++]= (float)vertNormArray[curVertLC.vert].x;
+					normals[nInd++]= (float)vertNormArray[curVertLC.vert].y;
+					normals[nInd++]= (float)vertNormArray[curVertLC.vert].z;
+					curVertLC = curVertLC.next;
+				}
+				curPolyC = curPolyC.next;
+			}
+			
+			// now put vertices and normals into VertexArray or Buffer
+			curSurf.vertexBuffer = Buffers.newDirectFloatBuffer(vertices.length);
+			curSurf.vertexBuffer.put(vertices);
+			curSurf.vertexBuffer.rewind();
+			
+			curSurf.normalBuffer =  Buffers.newDirectFloatBuffer(normals.length);
+			curSurf.normalBuffer.put(normals);
+			curSurf.normalBuffer.rewind();	
 		}//for surf
 		
 		this.calcPolyNorms();
 		this.calcVertNorms();
 		this.calcBoundingSphere();
-		
 	}
 	
-	public int getMaterial(String name,Instance_Geometry instanceGeom,Library_Materials lMaterials)
+	public int getMaterial(String name,Instance_Geometry instanceGeom,Library_Materials lMaterials, Library_Effects lEffects)
 	{
 		
-		ArrayList bindings = instanceGeom.instance_material;
+		ArrayList<Instance_Material> bindings = instanceGeom.instance_material;
 		String target=null;
 		String effect;
 		
-		
 		for(int x=0;x<bindings.size();x++)
-		{
-			if(((Instance_Material)bindings.get(x)).symbol.matches(name))
+			if(bindings.get(x).symbol.matches(name))
 			{
-				target = ((Instance_Material)bindings.get(x)).target.substring(1);
+				target = bindings.get(x).target.substring(1);
 				break;
 			}
-		}
 		
 		effect = lMaterials.getEffect(target);
 		
+		
 		for(int x=0;x<materials.length;x++)
-		{
 			if(materials[x].materialName.matches(effect.substring(1)))
 				return x;
-			
-		}
 		
 		return 0;
 	}
 	
-	public Double3D[] convertToDouble3DArray(ArrayList list)
+	public Double3D[] convertToDouble3DArray(ArrayList<Double3D> list)
 	{
 		Double3D[] array = new Double3D[list.size()];
 		
 		for(int x=0;x<array.length;x++)
-		{
-			array[x] = (Double3D)list.get(x);
-		}
+			array[x] = list.get(x);
 		
 		return array;
 	}
 	
-	
-	public void addToVertArrayPoly(int location,PolyListCell cell)
+	public void addToVertArrayPoly(int location, PolyListCell cell)
 	{
+		//Get the right Vertex based on it's index
 		VertCell vc = (VertCell)vertArray.get(location);
 		PolyListCell cur;
 		
+		//If it's the first assign it as the first
 		if(vc.polys == null)
 			vc.polys = cell;
-		
-		else
-		{
+		else //Otherwise, find it's position
+		{	
 			cur = vc.polys;
-			
-			while(cur.next != null)
-			{
-				cur = vc.polys.next;
-			}
-			
+			for(;cur.next != null; cur = cur.next)
+				;
 			cur.next = cell;
-			cur.next = null;
 		}
 	}
 	
@@ -374,7 +472,7 @@ public class ColladaLoader extends PMesh{
 		}
 	}
 	
-	public Double3D[] getValues(int[] locations,String source,ArrayList sources)
+	public Double3D[] getValues(int[] locations, String source, ArrayList<Source> sources)
 	{
 		
 		boolean flag = true;

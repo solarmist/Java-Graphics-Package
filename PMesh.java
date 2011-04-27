@@ -1,9 +1,12 @@
 
 import java.io.*;
 import java.nio.*;
+
+import javax.media.opengl.fixedfunc.GLLightingFunc;
+import javax.media.opengl.fixedfunc.GLMatrixFunc;
 import javax.media.opengl.glu.*;
 import javax.media.opengl.*;
-import javax.media.opengl.GL.*;
+//import javax.media.opengl.GL.*;
 import java.util.ArrayList;
 import static javax.media.opengl.GL2.*;
 
@@ -21,6 +24,10 @@ public abstract class PMesh implements Serializable
 ///////////////////////////////////////////////////////////////////////////////
 // DATA MEMBERS
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	public String fileType;
 	public String filePath;
 	public String objName;
@@ -58,6 +65,7 @@ public abstract class PMesh implements Serializable
 	 */
 	public class VertCell implements Serializable
 	{
+	private static final long serialVersionUID = 1L;
 		Double3D worldPos;
 		Double3D viewPos;
 		Double3D screenPos;
@@ -84,10 +92,11 @@ public abstract class PMesh implements Serializable
 	 */
 	public class VertListCell implements Serializable
 	{
+		private static final long serialVersionUID = 1L;
 		int vert;			// index of vertex in the array
 		int norm;			// index of normal for this vertex
 		int tex;			// index of texture vertex for this vertex
-		VertListCell next;	// pointer to the rest of the verticies in the polygon
+		VertListCell next;	// pointer to the rest of the vertices in the polygon
 
 		public VertListCell()
 		{
@@ -95,7 +104,7 @@ public abstract class PMesh implements Serializable
 			norm = -1;
 			tex = -1;
 			next = null;
-		} // enc constructor
+		} // end constructor
 	} // end class VertListCell
 
 	/**
@@ -103,9 +112,10 @@ public abstract class PMesh implements Serializable
 	 */
 	public class PolyCell implements Serializable
 	{
-		int numVerts;			// total number of verticies in the polygon
+		private static final long serialVersionUID = 1L;
+		int numVerts;			// total number of vertices in the polygon
 		VertListCell vert;		// pointer to the first vertex
-		Double3D normal;			// poly normal
+		Double3D normal;		// polygon normal
 		Double3D viewNorm;		// viewpoint transformed normal
 		boolean culled;			// culling flag
 		SurfCell parentSurf;	// pointer to the original surface cell for this polygon
@@ -127,6 +137,7 @@ public abstract class PMesh implements Serializable
 	 */
 	public class PolyListCell implements Serializable
 	{
+		private static final long serialVersionUID = 1L;
 		PolyCell poly;		// pointer to polygon
 		PolyListCell next;	// pointer to the next polygon in the list
 
@@ -134,7 +145,7 @@ public abstract class PMesh implements Serializable
 		{
 			poly = null;
 			next = null;
-		} // enc constructor
+		} // end constructor
 	} // end class PolyListCell
 
 	/**
@@ -142,6 +153,7 @@ public abstract class PMesh implements Serializable
 	 */
 	public class SurfCell implements Serializable
 	{
+		private static final long serialVersionUID = 1L;
 		int numPoly;			/* Total number of polygons in this surface */
 		PolyCell polyHead;		/* pointer to first polygon */
 		public int material;			/* index of the material to apply to this surface */
@@ -183,7 +195,7 @@ public abstract class PMesh implements Serializable
 		vertArray = null;
 		texVertArray = null;
 		vertNormArray = null;
-		viewNormArray = null; //only need for Ray Tracing - instantiaed in RayTracer:doViewTrans()
+		viewNormArray = null; //only need for Ray Tracing - instantiated in RayTracer:doViewTrans()
 		materials = null;
 		active = true;
 		next = null;
@@ -228,11 +240,11 @@ public abstract class PMesh implements Serializable
 	public void draw(Camera camera, GL2 gl, GLU glu)
 	{
 		SurfCell curSurf;
-		PolyCell curPoly;
-		VertListCell curVert;
+		//PolyCell curPoly;
+		//VertListCell curVert;
 
-		Double3D vertNormal; // vertex normal vector (used for Gouraud shading)
-		Double3D polyNormal; // polygon normal vector (used for flat shading)
+		//Double3D vertNormal; // vertex normal vector (used for Gouraud shading)
+		//Double3D polyNormal; // polygon normal vector (used for flat shading)
 
 		// Check for pending object transformations
 		if(transformPending && pendingTransform != null){
@@ -274,8 +286,8 @@ public abstract class PMesh implements Serializable
 
 		if(active)
 		{
-			boolean flat;
-			gl.glMatrixMode(gl.GL_MODELVIEW);
+			//boolean flat;
+			gl.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
 			gl.glLoadIdentity();
 			gl.glMultMatrixd(camera.viewMat,0);
 			gl.glMultMatrixd(modelMat,0);
@@ -283,13 +295,13 @@ public abstract class PMesh implements Serializable
 			curSurf = surfHead;
 			while(curSurf != null)
 			{
-				gl.glMaterialfv(gl.GL_FRONT_AND_BACK, gl.GL_AMBIENT,
+				gl.glMaterialfv(GL.GL_FRONT_AND_BACK, GLLightingFunc.GL_AMBIENT,
 						materials[curSurf.material].ka.toFloatv(),0 );
-				gl.glMaterialfv(gl.GL_FRONT_AND_BACK, gl.GL_DIFFUSE,
+				gl.glMaterialfv(GL.GL_FRONT_AND_BACK, GLLightingFunc.GL_DIFFUSE,
 						materials[curSurf.material].kd.toFloatv(),0);
-				gl.glMaterialfv(gl.GL_FRONT_AND_BACK, gl.GL_SPECULAR,
+				gl.glMaterialfv(GL.GL_FRONT_AND_BACK, GLLightingFunc.GL_SPECULAR,
 						materials[curSurf.material].ks.toFloatv(),0 );
-				gl.glMaterialf(gl.GL_FRONT_AND_BACK, gl.GL_SHININESS,
+				gl.glMaterialf(GL.GL_FRONT_AND_BACK, GLLightingFunc.GL_SHININESS,
 						(float)materials[curSurf.material].shiny );
 
 				gl.glEnableClientState (GL_VERTEX_ARRAY);
@@ -438,9 +450,9 @@ public abstract class PMesh implements Serializable
 	 */
 	public Sphere calcBoundingSphere()
 	{
-		PolyCell curPoly;
-		VertListCell curVert;
-		PolyListCell curPolyList;
+		//PolyCell curPoly;
+		//VertListCell curVert;
+		//PolyListCell curPolyList;
 
 		double greatest = 0.0;
 		double dist;

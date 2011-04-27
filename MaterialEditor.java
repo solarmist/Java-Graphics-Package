@@ -15,6 +15,8 @@ import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.tree.*;
 import javax.swing.event.*;
+import javax.media.opengl.fixedfunc.GLLightingFunc;
+import javax.media.opengl.fixedfunc.GLMatrixFunc;
 import javax.media.opengl.glu.*;
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
@@ -24,7 +26,7 @@ import java.text.NumberFormat;
 import java.util.Vector;
 import javax.media.opengl.*;
 import javax.media.opengl.awt.GLCanvas;
-import com.jogamp.opengl.util.*;
+//import com.jogamp.opengl.util.*;
 import static javax.media.opengl.GL2.*;
 
 /**
@@ -35,6 +37,7 @@ import static javax.media.opengl.GL2.*;
  */
 public class MaterialEditor extends JDialog implements TreeSelectionListener
 {
+	private static final long serialVersionUID = 1L;
 	Scene theScene;
 	MaterialCanvas previewCanvas, editCanvas;
 	final int BASE = 0;//for materials[]
@@ -537,12 +540,12 @@ public class MaterialEditor extends JDialog implements TreeSelectionListener
 	public void calculateNodes(DefaultMutableTreeNode top)
 	{
 		DefaultMutableTreeNode object = null;
-		DefaultMutableTreeNode surfaces = null;
+		//DefaultMutableTreeNode surfaces = null;
 		DefaultMutableTreeNode material = null;
-		DefaultMutableTreeNode child = null;
-		Vector meshes = theScene.objects;
+		//DefaultMutableTreeNode child = null;
+		Vector<PMesh> meshes = theScene.objects;
 		PMesh mesh = null;
-		PMesh.SurfCell surf = null;
+		//PMesh.SurfCell surf = null;
 		for(int i = 0; i < meshes.size(); i++)
 		{
 			mesh = (PMesh) meshes.get(i);
@@ -738,19 +741,19 @@ class MaterialCanvas implements GLEventListener
 		GLU glu = new GLU();
 		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		gl.glMatrixMode(gl.GL_PROJECTION);
+		gl.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
 		gl.glLoadIdentity();
 		gl.glFrustum(-4.0,4.0,-4.0,4.0,9,100);
 
-		gl.glMatrixMode(gl.GL_MODELVIEW);
+		gl.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
 		gl.glLoadIdentity();
 		glu.gluLookAt(0,10,10,0,0,0,0,1,0);
 
 		// Use the current material
 		gl.glMaterialfv(GL_FRONT, GL_AMBIENT, material.ka.toFloatv(), 0 );
-		gl.glMaterialfv(gl.GL_FRONT, gl.GL_DIFFUSE, material.kd.toFloatv(),0 );
-		gl.glMaterialfv(gl.GL_FRONT, gl.GL_SPECULAR, material.ks.toFloatv(),0 );
-		gl.glMaterialf(gl.GL_FRONT, gl.GL_SHININESS, (float)material.shiny);
+		gl.glMaterialfv(GL.GL_FRONT, GLLightingFunc.GL_DIFFUSE, material.kd.toFloatv(),0 );
+		gl.glMaterialfv(GL.GL_FRONT, GLLightingFunc.GL_SPECULAR, material.ks.toFloatv(),0 );
+		gl.glMaterialf(GL.GL_FRONT, GLLightingFunc.GL_SHININESS, (float)material.shiny);
 
 		glu.gluSphere(glu.gluNewQuadric(), 4.0, 20, 20);
 	} // end method display
@@ -760,8 +763,8 @@ class MaterialCanvas implements GLEventListener
 	public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height)
 	{
 		GL gl = drawable.getGL();
-//		GLU glu = drawable.getGLU();
-		GLU glu = new GLU();
+		//GLU glu = drawable.getGLU();
+		//GLU glu = new GLU();
 		
 		// Reset The Current Viewport And Perspective Transformation
 		gl.glViewport(0, 0, width, height);
@@ -769,7 +772,7 @@ class MaterialCanvas implements GLEventListener
 
 	public void init(GLAutoDrawable drawable) {
 		GL2 gl = drawable.getGL().getGL2();
-//		GLU glu = drawable.getGLU();
+		//GLU glu = drawable.getGLU();
 		GLU glu = new GLU();
 		
 		gl.glViewport(0, 0, 200, 200);
@@ -780,7 +783,7 @@ class MaterialCanvas implements GLEventListener
 		gl.glEnable(GL_DEPTH_TEST);
 		gl.glEnable(GL_NORMALIZE);
 		gl.glEnable(GL_LIGHTING);
-		gl.glMatrixMode(gl.GL_PROJECTION);
+		gl.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
 		gl.glLoadIdentity();
 		gl.glFrustum(-4.0,4.0,-4.0,4.0,9,100);
 		gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

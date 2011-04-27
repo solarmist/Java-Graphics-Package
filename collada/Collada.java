@@ -27,7 +27,7 @@ public class Collada {
 
     public Library_Materials material;
     public Library_Effects effects;
-    public Library_Geometries gemetries;
+    public Library_Geometries geometries;
     public Library_Visual_Scenes vscenes;
     public Library_Images images;
     public Scene scene;
@@ -38,7 +38,7 @@ public class Collada {
     public Collada(String file) {
         material = new Library_Materials();
         effects = new Library_Effects();
-        gemetries = new Library_Geometries();
+        geometries = new Library_Geometries();
         vscenes = new Library_Visual_Scenes();
         scene = new Scene();
         images = new Library_Images();
@@ -89,7 +89,7 @@ public class Collada {
             }
 
             else if (nl.item(x).getNodeName().matches("library_geometries")) {
-                gemetries.getGeometries(fileName);
+                geometries.getGeometries(fileName);
             }
 
             else if (nl.item(x).getNodeName().matches("library_visual_scenes")) {

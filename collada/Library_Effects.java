@@ -144,7 +144,7 @@ public class Library_Effects {
     {
     	for(int x=1;x<nodes.getLength();x+=2)
     	{
-    		if (nodes.item(x).getNodeName().matches("phong"))
+    		if (nodes.item(x).getNodeName().matches("phong") || nodes.item(x).getNodeName().matches("blinn"))
     			proccessPhong(nodes.item(x).getChildNodes(),tempEffect);
     		else
     			System.out.println("Alert: " + nodes.item(x).getNodeName() +
