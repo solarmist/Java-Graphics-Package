@@ -69,8 +69,8 @@ public abstract class PMesh implements Serializable
 	{
 	private static final long serialVersionUID = 1L;
 		public Double3D worldPos;
-		Double3D viewPos;
-		Double3D screenPos;
+		public Double3D viewPos;
+		public Double3D screenPos;
 		public PolyListCell polys;
 
 		public VertCell()
@@ -117,8 +117,8 @@ public abstract class PMesh implements Serializable
 		private static final long serialVersionUID = 1L;
 		public int numVerts;			// total number of vertices in the polygon
 		public VertListCell vert;		// pointer to the first vertex
-		Double3D normal;		// polygon normal
-		Double3D viewNorm;		// viewpoint transformed normal
+		public Double3D normal;		// polygon normal
+		public Double3D viewNorm;		// viewpoint transformed normal
 		boolean culled;			// culling flag
 		public SurfCell parentSurf;	// pointer to the original surface cell for this polygon
 		public PolyCell next;			// pointer to the next polygon in the surface
