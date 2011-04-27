@@ -70,7 +70,11 @@ public class FileExtensionFilter extends FileFilter {
 	public static String TYPE_UNKNOWN = "Type Unknown";
 	public static String HIDDEN_FILE = "Hidden File";
 
+<<<<<<< HEAD
 	public Hashtable<String, FileExtensionFilter> filters = null;
+=======
+	public Hashtable<String,FileExtensionFilter> filters = null;
+>>>>>>> Minor updates.
 	public String description = null;
 	public String fullDescription = null;
 	public boolean useExtensionsInDescription = true;
@@ -82,7 +86,11 @@ public class FileExtensionFilter extends FileFilter {
 	 * @see #addExtension
 	 */
 	public FileExtensionFilter() {
+<<<<<<< HEAD
 	this.filters = new Hashtable<String, FileExtensionFilter>();
+=======
+	this.filters = new Hashtable<String,FileExtensionFilter>();
+>>>>>>> Minor updates.
 	}
 
 	/**
@@ -199,10 +207,20 @@ public class FileExtensionFilter extends FileFilter {
 	 *
 	 * Note that the "." before the extension is not needed and will be ignored.
 	 */
+<<<<<<< HEAD
 	public void addExtension(String extension) 
 	{
 		if(filters == null)
 			filters = new Hashtable<String, FileExtensionFilter>(5);
+=======
+	public void addExtension(String extension) {
+	if(filters == null) {
+		filters = new Hashtable<String,FileExtensionFilter>(5);
+	}
+	filters.put(extension.toLowerCase(), this);
+	fullDescription = null;
+	}
+>>>>>>> Minor updates.
 
 		filters.put(extension.toLowerCase(), this);
 		fullDescription = null;

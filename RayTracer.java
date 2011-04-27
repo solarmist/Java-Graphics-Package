@@ -196,6 +196,8 @@ public class RayTracer implements Runnable
 			        imageSamples[i].y = heightRatio / 2 * (imageSamples[i].y / 4.0);
 			        //System.out.println("Jitter by: " + imageSamples[i] + " Pixel width: " + widthRatio + " Pixel height: " + heightRatio );
 			    }
+			    imageSamples[0].x++;
+			    imageSamples[0].x--;
 			    
 			}
 		}
