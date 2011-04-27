@@ -17,11 +17,11 @@ import java.util.*;
 public class Triangles {
     public String material;
     public int count;
-    public ArrayList inputs;
+    public ArrayList<Input> inputs;
     public int[] verts;
 
     public Triangles() {
-        inputs = new ArrayList();
+        inputs = new ArrayList<Input>();
     }
 
     public void setVerts(String i) {

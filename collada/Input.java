@@ -1,7 +1,4 @@
 package collada;
-
-import java.util.ArrayList;
-
 /**
  * <p>Title: </p>
  *

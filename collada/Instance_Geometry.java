@@ -19,9 +19,9 @@ public class Instance_Geometry {
 	public String sid;
     public String name;
     public String url;
-    public ArrayList instance_material;
+    public ArrayList<Instance_Material> instance_materials;
 
     public Instance_Geometry() {
-        instance_material = new ArrayList();
+        instance_materials = new ArrayList<Instance_Material>();
     }
 }

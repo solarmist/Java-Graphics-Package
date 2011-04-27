@@ -16,12 +16,12 @@ import org.xml.sax.SAXException;
 
 public class Library_Images {
 
-	public ArrayList images;
+	public ArrayList<Image> images;
     public Document document;
     
     public Library_Images()
     {
-    	images = new ArrayList();
+    	images = new ArrayList<Image>();
     }
     
 	public void getImages(String fileName)

@@ -16,23 +16,23 @@ import java.util.ArrayList;
  */
 public class Mesh {
 
-    public ArrayList sources;
+    public ArrayList<Source> sources;
     public Vertices vertices;
-    public ArrayList lines;
-    public ArrayList linestrips;
-    public ArrayList polygons;
-    public ArrayList polylist;
-    public ArrayList triangles;
-    public ArrayList tristrips;
+    //public ArrayList lines;
+    //public ArrayList linestrips;
+    //public ArrayList polygons;
+    //public ArrayList polylist;
+    public ArrayList<Triangles> triangles;
+    //public ArrayList tristrips;
 
     public Mesh() {
-        sources = new ArrayList();
+        sources = new ArrayList<Source>();
         vertices = new Vertices();
-        lines = new ArrayList();
-        linestrips = new ArrayList();
-        polygons = new ArrayList();
-        polylist = new ArrayList();
-        triangles = new ArrayList();
-        tristrips = new ArrayList();
+        //lines = new ArrayList();
+        //linestrips = new ArrayList();
+        //polygons = new ArrayList();
+        //polylist = new ArrayList();
+        triangles = new ArrayList<Triangles>();
+        //tristrips = new ArrayList();
     }
 }

@@ -29,10 +29,10 @@ public class Library_Visual_Scenes {
     public String ID;
     public String name;
     public Document document;
-    public ArrayList scenes;
+    public ArrayList<Visual_Scene> scenes;
 
     public Library_Visual_Scenes() {
-        scenes = new ArrayList();
+        scenes = new ArrayList<Visual_Scene>();
     }
 
     public void getScenes(String fileName) {
@@ -52,7 +52,7 @@ public class Library_Visual_Scenes {
             document = db.parse(fileName);
         }
 
-        //possbile errors when parsing the tree the DOM uses SAX to parse the tree
+        //Possible errors when parsing the tree the DOM uses SAX to parse the tree
         catch (ParserConfigurationException e) {
             System.out.println(e.getMessage());
             return;
@@ -64,10 +64,10 @@ public class Library_Visual_Scenes {
             return;
         }
 
-        //get the root elememt
+        //get the root element
         Element docEle = document.getDocumentElement();
 
-        //get a nodelist of <material> elements
+        //get a NodeList of <material> elements
         NodeList nl = docEle.getElementsByTagName("library_visual_scenes");
         childern = nl.item(0).getChildNodes();
         setScene(childern);
@@ -177,7 +177,7 @@ public class Library_Visual_Scenes {
                                             "instance_material")) {
                                         tempIM = processesInstanceMaterial(
                                                 bindings.item(q));
-                                        tempIG.instance_material.add(tempIM);
+                                        tempIG.instance_materials.add(tempIM);
                                     } else
                                         System.out.println("Alert: " +
                                                 bindings.item(q).getNodeName() +

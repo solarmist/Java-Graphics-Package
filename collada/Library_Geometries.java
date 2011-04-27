@@ -13,25 +13,29 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NamedNodeMap;
 
 /**
- * <p>Title: </p>
+ * <p>Title: Parser for Collada Library_Geomery </p>
  *
- * <p>Description: </p>
+ * <p>Description: This class parses a document for the library_geomerty node of a collada XML(.dae) file</p>
  *
- * <p>Copyright: Copyright (c) 2007</p>
+ * <p>Created: 2007</p>
+ * 
+ * <p>Updated: 2011</p>
  *
- * <p>Company: </p>
+ * <p>Author: Someone </p>
+ * 
+ * <p>Author: Joshua Olson </p>
  *
  * @author not attributable
- * @version 1.0
+ * @version 2.0
  */
 public class Library_Geometries {
 
-    public ArrayList geometry;
+    public ArrayList<Geometry> geometry;
     public Document document;
 
     public Library_Geometries() {
 
-        geometry = new ArrayList();
+        geometry = new ArrayList<Geometry>();
     }
 
     public Mesh processMesh(NodeList meshChildern) {
@@ -224,11 +228,12 @@ public class Library_Geometries {
 	            if (attribute != null)
 	                temp.name = attribute.getNodeValue();
 	
-	            String[] t = currentNode.getTextContent().split(" ");
+	            //String[] t = currentNode.getTextContent().split(" ");
 	
-	            for (int x = 0; x < t.length; x++) {
-	                temp.bools.add(t[x]);
-	            }
+	            temp.setArray(currentNode.getTextContent());
+	            //for (int x = 0; x < t.length; x++) {
+	            //    temp.array[x] = t[x];
+	            //}
 	
 	            tempSource.boolArray = temp;
 	

@@ -27,12 +27,12 @@ import java.util.ArrayList;
  */
 public class Library_Materials {
 
-    public ArrayList materials;
+    public ArrayList<Material> materials;
     public Document document;
 
 
     public Library_Materials() {
-        materials = new ArrayList();
+        materials = new ArrayList<Material>();
     }
     
     public int getNumber(String name)
@@ -40,7 +40,7 @@ public class Library_Materials {
     	
     	for(int x=0;x<materials.size();x++)
     	{
-    		if(((Material)materials.get(x)).id.matches(name))
+    		if( materials.get(x).id.matches(name) )
     		{
     			return x;
     		}
@@ -51,7 +51,7 @@ public class Library_Materials {
     
     public String getEffect(String name)
     {
-    	return ((Material)materials.get(getNumber(name))).instance_effect;
+    	return materials.get( getNumber(name) ).instance_effect;
     	
     }
 
@@ -78,8 +78,7 @@ public class Library_Materials {
             document = db.parse(fileName);
         }
 
-        //possbile errors when parsing the tree the DOM uses SAX to parse the tree
-        //possbile errors when parsing the tree the DOM uses SAX to parse the tree
+        //Possible errors when parsing the tree the DOM uses SAX to parse the tree
         catch (ParserConfigurationException e) {
             System.out.println(e.getMessage());
             return;
@@ -91,10 +90,10 @@ public class Library_Materials {
             return;
         }
 
-        //get the root elememt
+        //get the root element
         Element docEle = document.getDocumentElement();
 
-        //get a nodelist of <material> elements
+        //get a NodeList of <material> elements
         NodeList nl = docEle.getElementsByTagName("library_materials");
         nl = nl.item(0).getChildNodes();
 

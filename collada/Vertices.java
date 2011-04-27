@@ -16,10 +16,10 @@ import java.util.ArrayList;
  */
 public class Vertices {
     public String id;
-    public ArrayList input;
+    public ArrayList<Input> input;
     public Extra extra;
 
     public Vertices() {
-        input = new ArrayList();
+        input = new ArrayList<Input>();
     }
 }

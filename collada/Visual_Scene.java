@@ -17,9 +17,9 @@ import java.util.*;
 public class Visual_Scene {
     public String name;
     public String id;
-    public ArrayList nodes;
+    public ArrayList<Nodec> nodes;
 
     public Visual_Scene() {
-        nodes = new ArrayList();
+        nodes = new ArrayList<Nodec>();
     }
 }

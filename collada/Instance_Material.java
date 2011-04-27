@@ -1,7 +1,4 @@
 package collada;
-
-import java.util.*;
-
 /**
  * <p>Title: </p>
  *

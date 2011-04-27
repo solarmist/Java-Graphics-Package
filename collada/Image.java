@@ -10,7 +10,7 @@ public class Image {
 	public int width;
 	public int depth = 1;
 	public Asset asset;
-	public ArrayList extra;
+	public ArrayList<Extra> extra;
 	public String data;
 	public String init_from;
 	

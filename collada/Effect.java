@@ -29,7 +29,7 @@ public class Effect {
     public float transparent[];
     public float transparency;
     public float indexOfRefraction;
-    public ArrayList newparam;
+    public ArrayList<Newparam> newparam;
     
 
     public Texture emissionTexture;
@@ -49,7 +49,7 @@ public class Effect {
         specular = new float[4];
         reflective = new float[4];
         transparent = new float[4];
-        newparam = new ArrayList();
+        newparam = new ArrayList<Newparam>();
         
         emissionTexture = new Texture();
         ambientTexture = new Texture();

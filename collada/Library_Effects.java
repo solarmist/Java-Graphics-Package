@@ -26,11 +26,11 @@ import java.util.ArrayList;
  */
 public class Library_Effects {
 
-    public ArrayList effects;
+    public ArrayList<Effect> effects;
     public Document document;
 
     public Library_Effects() {
-        effects = new ArrayList();
+        effects = new ArrayList<Effect>();
     }
 
     public void getEffects(String fileName) {
