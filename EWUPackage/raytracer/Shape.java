@@ -1,3 +1,4 @@
+package EWUPackage.raytracer;
 /*
  * This is the generic shape interface class that all shapes implement
  *  

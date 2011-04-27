@@ -1,3 +1,7 @@
+package EWUPackage.raytracer;
+
+import EWUPackage.scene.*;
+import EWUPackage.scene.primitives.*;
 
 /**
  * This class represents a Triangle.

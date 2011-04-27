@@ -1,3 +1,6 @@
+package EWUPackage.raytracer;
+
+import EWUPackage.scene.primitives.*;
 /*
  * Ray class
  * 

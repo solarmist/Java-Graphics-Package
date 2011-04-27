@@ -1,7 +1,10 @@
+package EWUPackage.raytracer;
 /**
  * This static class if for sampling techniques.
  */
 import java.util.Random;
+
+import EWUPackage.scene.primitives.*;
 
 public class Sample {
 	

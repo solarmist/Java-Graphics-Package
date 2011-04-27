@@ -131,11 +131,7 @@ public class ObjectPanel extends JPanel
 							fileType = ObjectTypes.TYPE_OBJ;
 						if(filter.getExtension(fileList[i]).equalsIgnoreCase("3ds"))
 							fileType = ObjectTypes.TYPE_3DS;
-<<<<<<< HEAD
 						if(filter.getExtension(fileList[i]).equalsIgnoreCase("dae"))
-=======
-						if(filter.getExtension(fileList[i]).equalsIgnoreCase("date"))
->>>>>>> Minor updates.
 							fileType = ObjectTypes.TYPE_DAE;
 						theScene.addObject(fileList[i].getPath(), fileType);
 						objectList.addItem(theScene.curObject.objName);

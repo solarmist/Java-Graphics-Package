@@ -21,7 +21,7 @@ public class Asset {
     public String revision;
     public String subject;
     public String title;
-    public Unit unit;
+    //public Unit unit;
     public String up_axis;
 
     public Asset() {

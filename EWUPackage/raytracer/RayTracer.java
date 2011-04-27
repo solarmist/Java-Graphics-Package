@@ -1,3 +1,4 @@
+package EWUPackage.raytracer;
 /*
  * This class starts and controls the ray tracer 
  * 
@@ -7,6 +8,9 @@
 import static javax.media.opengl.GL2.*;
 import javax.media.opengl.*;
 import javax.media.opengl.glu.*;
+
+import EWUPackage.scene.*;
+import EWUPackage.scene.primitives.*;
 
 public class RayTracer implements Runnable
 {
@@ -29,7 +33,7 @@ public class RayTracer implements Runnable
 	RayTracer()
 	{}
 	
-	RayTracer(Scene theScene, GL2 _gl, GLU _glu)
+	public RayTracer(Scene theScene, GL2 _gl, GLU _glu)
 	{
 		System.out.println("Init RayTracer");
 		gl = _gl;
@@ -448,7 +452,7 @@ public class RayTracer implements Runnable
 					Double3D R = new Double3D();
 					Double3D I = ray.dir;//.sMult(-1.0);
 					Double3D N = hit.normal;
-					double IdN = I.dot(N);
+					//double IdN = I.dot(N);
 					
 					//if (IdN > 0){
 					//	N = N.sMult(-1.0);

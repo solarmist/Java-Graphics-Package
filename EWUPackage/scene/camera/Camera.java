@@ -3,12 +3,8 @@ package EWUPackage.scene.camera;
 import javax.media.opengl.fixedfunc.GLMatrixFunc;
 import javax.media.opengl.glu.*;
 import javax.media.opengl.*;
-<<<<<<< HEAD
-
 import EWUPackage.scene.primitives.*;
 
-=======
->>>>>>> Minor updates.
 /**
  * This camera is an implementation of a Camera for viewing a 3D scene in OpenGL.
  *

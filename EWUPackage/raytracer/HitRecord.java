@@ -1,3 +1,6 @@
+package EWUPackage.raytracer;
+
+import EWUPackage.scene.primitives.*;
 /*
  * Structure for passing data to and from the ray intersection methods
  * 

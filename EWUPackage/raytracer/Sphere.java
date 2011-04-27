@@ -1,5 +1,6 @@
-package EWUPackage.scene;
+package EWUPackage.raytracer;
 
+import EWUPackage.scene.PMesh;
 import EWUPackage.scene.primitives.*;
 
 /**

@@ -18,6 +18,7 @@ import javax.media.opengl.fixedfunc.GLMatrixFunc;
 import javax.media.opengl.glu.*;
 
 import EWUPackage.*;
+import EWUPackage.raytracer.*;
 import EWUPackage.GUI.*;
 import EWUPackage.loaders.ColladaLoader;
 import EWUPackage.loaders.ObjLoaderBuffer;
@@ -322,12 +323,6 @@ public class Scene implements GLEventListener
   			
   			System.out.println("End RayTrace");
 			
-<<<<<<< HEAD
-			gl.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
-	        gl.glPopMatrix();
-
-=======
->>>>>>> Multi-threaded raytracing with shading(not working.
 			rayTrace = false;
 
 		} // end if
