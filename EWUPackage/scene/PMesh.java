@@ -2,10 +2,18 @@ package EWUPackage.scene;
 
 import java.io.*;
 import java.nio.*;
+<<<<<<< HEAD:EWUPackage/scene/PMesh.java
+=======
+
+>>>>>>> Got geometry loading properly and displaying on screen.:PMesh.java
 import javax.media.opengl.fixedfunc.GLLightingFunc;
 import javax.media.opengl.fixedfunc.GLMatrixFunc;
 import javax.media.opengl.glu.*;
 import javax.media.opengl.*;
+<<<<<<< HEAD:EWUPackage/scene/PMesh.java
+=======
+//import javax.media.opengl.GL.*;
+>>>>>>> Got geometry loading properly and displaying on screen.:PMesh.java
 import java.util.ArrayList;
 import static javax.media.opengl.GL2.*;
 
@@ -68,7 +76,11 @@ public abstract class PMesh implements Serializable
 	public class VertCell implements Serializable
 	{
 	private static final long serialVersionUID = 1L;
+<<<<<<< HEAD:EWUPackage/scene/PMesh.java
 		public Double3D worldPos;
+=======
+		Double3D worldPos;
+>>>>>>> Got geometry loading properly and displaying on screen.:PMesh.java
 		Double3D viewPos;
 		Double3D screenPos;
 		public PolyListCell polys;
@@ -95,10 +107,17 @@ public abstract class PMesh implements Serializable
 	public class VertListCell implements Serializable
 	{
 		private static final long serialVersionUID = 1L;
+<<<<<<< HEAD:EWUPackage/scene/PMesh.java
 		public int vert;			// index of vertex in the array
 		public int norm;			// index of normal for this vertex
 		public int tex;			// index of texture vertex for this vertex
 		public VertListCell next;	// pointer to the rest of the vertices in the polygon
+=======
+		int vert;			// index of vertex in the array
+		int norm;			// index of normal for this vertex
+		int tex;			// index of texture vertex for this vertex
+		VertListCell next;	// pointer to the rest of the vertices in the polygon
+>>>>>>> Got geometry loading properly and displaying on screen.:PMesh.java
 
 		public VertListCell()
 		{
@@ -115,8 +134,13 @@ public abstract class PMesh implements Serializable
 	public class PolyCell implements Serializable
 	{
 		private static final long serialVersionUID = 1L;
+<<<<<<< HEAD:EWUPackage/scene/PMesh.java
 		public int numVerts;			// total number of vertices in the polygon
 		public VertListCell vert;		// pointer to the first vertex
+=======
+		int numVerts;			// total number of vertices in the polygon
+		VertListCell vert;		// pointer to the first vertex
+>>>>>>> Got geometry loading properly and displaying on screen.:PMesh.java
 		Double3D normal;		// polygon normal
 		Double3D viewNorm;		// viewpoint transformed normal
 		boolean culled;			// culling flag
@@ -140,8 +164,13 @@ public abstract class PMesh implements Serializable
 	public class PolyListCell implements Serializable
 	{
 		private static final long serialVersionUID = 1L;
+<<<<<<< HEAD:EWUPackage/scene/PMesh.java
 		public PolyCell poly;		// pointer to polygon
 		public PolyListCell next;	// pointer to the next polygon in the list
+=======
+		PolyCell poly;		// pointer to polygon
+		PolyListCell next;	// pointer to the next polygon in the list
+>>>>>>> Got geometry loading properly and displaying on screen.:PMesh.java
 
 		public PolyListCell()
 		{
@@ -156,8 +185,13 @@ public abstract class PMesh implements Serializable
 	public class SurfCell implements Serializable
 	{
 		private static final long serialVersionUID = 1L;
+<<<<<<< HEAD:EWUPackage/scene/PMesh.java
 		public int numPoly;			/* Total number of polygons in this surface */
 		public PolyCell polyHead;		/* pointer to first polygon */
+=======
+		int numPoly;			/* Total number of polygons in this surface */
+		PolyCell polyHead;		/* pointer to first polygon */
+>>>>>>> Got geometry loading properly and displaying on screen.:PMesh.java
 		public int material;			/* index of the material to apply to this surface */
 		public SurfCell next;			/* pointer to the next surface */
 		//public boolean smooth;
