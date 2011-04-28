@@ -404,7 +404,7 @@ public class ColladaLoader extends PMesh{
 		
 		this.calcPolyNorms();
 		this.calcVertNorms();
-		this.calcBoundingSphere();
+		this.boundingSphere = this.calcBoundingSphere();
 	}
 	
 	public int getMaterial(String name,Instance_Geometry instanceGeom,Library_Materials lMaterials, Library_Effects lEffects)
