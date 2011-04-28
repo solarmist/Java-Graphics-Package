@@ -17,14 +17,13 @@ import EWUPackage.scene.primitives.*;
  *
  * @version 1-Feb-2005
  */
-public class CameraPanel extends JPanel implements FocusListener
+public class CameraPanel extends MasterPanel implements FocusListener
 {
 
 ///////////////////////////////////////////////////////////////////////////////
 // DATA MEMBERS
 
 	private static final long serialVersionUID = 1L;
-	public Scene theScene;
 	public JPanel camModeTogglePanel, glFrustumPanel, gluPerspectivePanel;
 	public ButtonGroup cameraModeButtonGroup;
 	public JRadioButton glFrustumButton, gluPerspectiveButton, glOrthoButton;
@@ -70,7 +69,9 @@ public class CameraPanel extends JPanel implements FocusListener
 
 	public CameraPanel(Scene aSceneRef)
 	{
-		theScene = aSceneRef;
+		super(aSceneRef);
+		name = "Camera";
+		
 		Camera cam = theScene.camera;
 		numFormat = new java.text.DecimalFormat("#0.00");
 		setLayout(new GridBagLayout());

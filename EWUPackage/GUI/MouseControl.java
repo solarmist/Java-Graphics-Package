@@ -24,6 +24,7 @@ public class MouseControl implements MouseMotionListener, MouseListener, MouseWh
 	//written by: Maren Johnson
 
 	ObjectPanel panel;
+	ControlPanel ctrlPanel;
 	Point beginCoord, endCoord;
 	boolean isAnObjectSelected;
 	//GL gl;
@@ -55,7 +56,7 @@ public class MouseControl implements MouseMotionListener, MouseListener, MouseWh
     public int movMode = ROLL_XY;
     // END INSERT TRACKBALL CODE (Daniel Dawson)
 
-	public MouseControl(ObjectPanel panelRef)
+	public MouseControl(ObjectPanel panelRef, ControlPanel ctrlPanel)
 	{
 		panel = panelRef;
 	}
@@ -288,7 +289,7 @@ END FIX ME RRM */
 			mouseY=evt.getY();
 
 			System.out.println("MouseControl-camera rotation updateCameraFields()");
-			panel.ctrlPanel.cameraPanel.updateCameraFields();
+			ctrlPanel.cameraPanel.updateCameraFields();
 			//panel.theScene.updateLightsPosition();
 		}
 		//End camera rotating code
@@ -340,7 +341,7 @@ END FIX ME RRM */
 			//					curCamera.ctrX, curCamera.ctrY, curCamera.ctrZ,
 			//					curCamera.upX, curCamera.upY, curCamera.upZ);
 			System.out.println("MouseControl-camera panning updateCameraFields()");
-			panel.ctrlPanel.cameraPanel.updateCameraFields();
+			ctrlPanel.cameraPanel.updateCameraFields();
 			//panel.theScene.updateLightsPosition();
             System.out.println("updateLightsPosition() NOT CALLED from mouseDragged");
 		}
@@ -397,7 +398,7 @@ END FIX ME RRM */
 			// END INSERT
 
 			System.out.println("MouseControl-camera movement updateCameraFields()");
-			panel.ctrlPanel.cameraPanel.updateCameraFields();
+			ctrlPanel.cameraPanel.updateCameraFields();
 			//panel.theScene.updateLightsPosition();
             System.out.println("updateLightsPosition() NOT CALLED from mouseWheelMoved");
 		}

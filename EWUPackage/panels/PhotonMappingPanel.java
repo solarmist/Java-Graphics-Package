@@ -11,10 +11,9 @@ import EWUPackage.scene.*;
  * @author	Ryan Mauer
  * @version 27-Feb-2004
  */
-public class PhotonMappingPanel extends JPanel
+public class PhotonMappingPanel extends MasterPanel
 {
 	public static final long serialVersionUID = 1L;
-	public Scene theScene;
 
 	public JPanel rayPanel;
 	public JLabel rayDepthLabel, raySamplesLabel;
@@ -40,7 +39,8 @@ public class PhotonMappingPanel extends JPanel
 
 	public PhotonMappingPanel(Scene aSceneRef)
 	{
-		this.theScene = aSceneRef;
+		super(aSceneRef);
+		name = "Photon Mapping";
 
 		this.setLayout(new GridBagLayout());
 		GridBagConstraints gBConstraints = new GridBagConstraints();

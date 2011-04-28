@@ -15,10 +15,9 @@ import java.awt.event.*;
  *
  * @version 5-Feb-2005
  */
-public class LightPanel extends JPanel
+public class LightPanel extends MasterPanel
 {
 	private static final long serialVersionUID = 1L;
-	public Scene theScene;
 	public JPanel lightSelectPanel, typePanel, colorPanel, locationPanel, attribPanel;
 	public JComboBox  lightList;
 	public JCheckBox onCheckBox;
@@ -36,7 +35,9 @@ public class LightPanel extends JPanel
 
 	public LightPanel(Scene aSceneRef)
 	{
-		this.theScene = aSceneRef;
+		super(aSceneRef);
+		name = "Lights";
+		
 		setLayout(new GridBagLayout());
 		GridBagConstraints gBConstraints;
 		numFormat = new java.text.DecimalFormat("#0.00");
