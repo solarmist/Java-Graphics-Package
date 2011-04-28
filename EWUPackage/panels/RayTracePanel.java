@@ -14,10 +14,9 @@ import EWUPackage.scene.*;
  *
  * @version 5-Feb-2005
  */
-public class RayTracePanel extends JPanel
+public class RayTracePanel extends MasterPanel
 {
 	private static final long serialVersionUID = 1L;
-	public Scene theScene;
 	public JPanel widgetPanel;
 	public JCheckBox spheresOnly;
 	public JCheckBox antiAliasing;
@@ -36,7 +35,9 @@ public class RayTracePanel extends JPanel
 	
 	public RayTracePanel(Scene aSceneRef)
 	{
-		this.theScene = aSceneRef;
+		super(aSceneRef);
+		name = "RayTracing";
+		
 		this.setBorder(new TitledBorder("Ray Tracer Settings"));
 		widgetPanel = new JPanel();
 		//widgetPanel.setBorder(new TitledBorder("Ray Tracer Settings"));

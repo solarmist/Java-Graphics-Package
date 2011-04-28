@@ -1,8 +1,11 @@
 package EWUPackage.GUI;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.util.*;
+import java.io.File;
+import java.lang.reflect.*;
 
 import EWUPackage.scene.*;
 import EWUPackage.panels.*;
@@ -22,12 +25,12 @@ public class ControlPanel extends JPanel
 	private static final long serialVersionUID = 1L;
 	public Scene theScene; // ref to the rendering object
 	public JTabbedPane tabPane;
-	public ArrayList<JPanel> panels;
+	public ArrayList<MasterPanel> panels;
 	public ObjectPanel objectPanel;
 	public CameraPanel cameraPanel;
 	public LightPanel lightPanel;
-	public FogPanel fogPanel;
-	public RayTracePanel rayTracePanel;
+	//public FogPanel fogPanel;
+	//public RayTracePanel rayTracePanel;
 	//public PhotonMappingPanel rtp;
 	
 	
@@ -38,30 +41,49 @@ public class ControlPanel extends JPanel
 
 		setLayout(new BorderLayout());
 		tabPane = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.WRAP_TAB_LAYOUT);
-		objectPanel = new ObjectPanel(theScene, this);
-		tabPane.addTab("Objects", objectPanel);
-		cameraPanel = new CameraPanel(theScene);
-		tabPane.addTab("Camera", cameraPanel);
-		lightPanel = new LightPanel(theScene);
-		tabPane.addTab("Lights", lightPanel);
-		fogPanel = new FogPanel(theScene);
-		tabPane.addTab("Fog", fogPanel);
-		rayTracePanel = new RayTracePanel(theScene);
-		tabPane.addTab("RayTracing", rayTracePanel);
-		
-		try{
-			//ClassLoader load = new ClassLoader();
-			Object o = Class.forName("EWUPackage.panels.PhotonMappingPanel").newInstance();
-			if (o != null)
-			{
-				panels.add((JPanel) o);
-				tabPane.add((JPanel) o);
-			}
-		//rtp = new PhotonMappingPanel(theScene);
-		//tabPane.addTab("Photon Mapping", rtp);
+
+		try
+		{
+			//Get the path of the package relative to the project directory
+			String packageName = "EWUPackage.panels";
+			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+	        assert classLoader != null;
+	        String path = "./" + packageName.replace('.', '/');
+
+	        //Check all the files in the package directory for Panel.class files 
+	        //If there are any add them to this panel as tabs
+	        File dir = new File(path);
+	        File[] files = dir.listFiles();
+	        for(File curFile : files)
+	        	
+	        	if(curFile.getName().endsWith("Panel.class") && !curFile.getName().endsWith("MasterPanel.class"))
+	        	{
+	        		String curPanel = curFile.getName();
+	        		int index = curPanel.indexOf('.');
+	        		curPanel = curPanel.substring(0, index);
+
+	        		@SuppressWarnings("unchecked")
+					Class<MasterPanel> loadPanel = (Class<MasterPanel>) Class.forName(packageName + "." + curPanel);
+					Constructor<MasterPanel> constructPanel = loadPanel.getConstructor(new Class[]{Scene.class});
+					
+					MasterPanel newPanel = constructPanel.newInstance(new Object[]{theScene});
+					if (newPanel != null)
+					{
+						if(newPanel.name == "Camera")
+							cameraPanel = (CameraPanel) newPanel;
+						if(newPanel.name == "Objects")
+							objectPanel = (ObjectPanel) newPanel;
+						if(newPanel.name == "Lights")
+							lightPanel = (LightPanel) newPanel;
+						
+						tabPane.addTab(newPanel.name, newPanel);
+					}//*/
+	        	}
+	        
 		}catch(Exception e)
 		{
-			System.out.println(e.toString());
+			e.printStackTrace();
+			System.exit(0);
 		}
 		add(tabPane, BorderLayout.CENTER);
  	} // end constructor

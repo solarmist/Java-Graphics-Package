@@ -18,17 +18,13 @@ import EWUPackage.utilities.*;
  *
  * @version 24-Jan-2005
  */
-public class ObjectPanel extends JPanel
+public class ObjectPanel extends MasterPanel
 {
 
 ///////////////////////////////////////////////////////////////////////////////
 // DATA MEMBERS
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
-	public Scene theScene; // ref to the rendering object
 	public JPanel scenePanel, selectionPanel, transformsPanel;
 	public ObjSpecsDialog objSpecsDialog;
 
@@ -58,13 +54,17 @@ public class ObjectPanel extends JPanel
 	public FileExtensionFilter filter;
 	public GridBagConstraints gBConstraints, ObjConstr;
 	public MouseControl mouseController;
-	public ControlPanel ctrlPanel;
+	//public ControlPanel ctrlPanel;
 
 	public MaterialEditor materialEditor;
 	public MaterialChooser materialChooser;
 
-	public ObjectPanel(Scene aSceneRef, ControlPanel aCtrlPanel)
+	public ObjectPanel(Scene aSceneRef)
 	{
+		super(aSceneRef);
+		name = "Objects";
+		
+		
 		objChooser = new JFileChooser("./EWUPackage/Objects");
 		filter = new FileExtensionFilter();
 		filter.addExtension("obj");
@@ -74,12 +74,12 @@ public class ObjectPanel extends JPanel
 		objChooser.setFileFilter(filter);
 		objChooser.setMultiSelectionEnabled(true);
 		theScene = aSceneRef;
-		ctrlPanel = aCtrlPanel;
+		//ctrlPanel = aCtrlPanel;
 
 		materialEditor = new MaterialEditor(aSceneRef);
 		materialChooser = new MaterialChooser(aSceneRef, materialEditor);
 
-		mouseController = new MouseControl( this );
+		mouseController = new MouseControl(this, aSceneRef.cntrlPanel);
 		theScene.canvas.addMouseListener( mouseController );
 		theScene.canvas.addMouseMotionListener( mouseController );
 		theScene.canvas.addMouseWheelListener( mouseController );

@@ -16,10 +16,9 @@ import EWUPackage.scene.*;
  * @version Spring 2004
  */
 
-public class FogPanel extends JPanel
+public class FogPanel extends MasterPanel
 {
   private static final long serialVersionUID = 1L;
-  public Scene theScene; // Reference to the scene
   public boolean fogEnabled; // true if fog is enabled
   public boolean clearColor; // true if clear color is enabled
   public JCheckBox enableFog; // toggles fog on and off
@@ -66,6 +65,9 @@ public class FogPanel extends JPanel
 
   public FogPanel(Scene sceneRef)
   {
+	super(sceneRef);
+	name = "Fog";
+	
     this.far = 1000.0f; // sets the far distance
     GridBagConstraints gBc;
     this.theScene = sceneRef;
