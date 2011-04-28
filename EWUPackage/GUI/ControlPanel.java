@@ -46,8 +46,6 @@ public class ControlPanel extends JPanel
 		{
 			//Get the path of the package relative to the project directory
 			String packageName = "EWUPackage.panels";
-			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-	        assert classLoader != null;
 	        String path = "./" + packageName.replace('.', '/');
 
 	        //Check all the files in the package directory for Panel.class files 
